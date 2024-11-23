@@ -1,27 +1,31 @@
 package config
 
-import "github.com/ShatteredRealms/go-common-service/pkg/config"
+import (
+	"context"
+
+	cconfig "github.com/ShatteredRealms/go-common-service/pkg/config"
+)
 
 var (
 	Version = "v1.0.0"
 )
 
 type ChatConfig struct {
-	config.BaseConfig `yaml:",inline" mapstructure:",squash"`
-	Postgres          config.DBPoolConfig `yaml:"postgres"`
+	cconfig.BaseConfig `yaml:",inline" chatstructure:",squash"`
+	Postgres           cconfig.DBPoolConfig `yaml:"postgres"`
 }
 
-func NewChatConfig() *ChatConfig {
-	return &ChatConfig{
-		BaseConfig: config.BaseConfig{
-			Server: config.ServerAddress{
+func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
+	config := &ChatConfig{
+		BaseConfig: cconfig.BaseConfig{
+			Server: cconfig.ServerAddress{
 				Host: "localhost",
-				Port: "8180",
+				Port: "8085",
 			},
-			Keycloak: config.KeycloakConfig{
+			Keycloak: cconfig.KeycloakConfig{
 				BaseURL:      "localhost:8080",
 				Realm:        "default",
-				Id:           "780b129c-3f75-441c-87ab-ace6c5691bd8",
+				Id:           "7b575e9b-c687-4cdc-b210-67c59b5f380f",
 				ClientId:     "sro-chat-service",
 				ClientSecret: "**********",
 			},
@@ -29,13 +33,16 @@ func NewChatConfig() *ChatConfig {
 			LogLevel:            0,
 			OpenTelemtryAddress: "localhost:4317",
 		},
-		Postgres: config.DBPoolConfig{
-			Master: config.DBConfig{
-				ServerAddress: config.ServerAddress{},
+		Postgres: cconfig.DBPoolConfig{
+			Master: cconfig.DBConfig{
+				ServerAddress: cconfig.ServerAddress{},
 				Name:          "chat-service",
 				Username:      "postgres",
 				Password:      "password",
 			},
 		},
 	}
+
+	err := cconfig.BindConfigEnvs(ctx, "sro-chat", config)
+	return config, err
 }

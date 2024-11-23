@@ -25,7 +25,11 @@ func main() {
 	ctx, span := tracer.Start(ctx, "main")
 	defer span.End()
 
-	cfg := config.NewChatConfig()
+	cfg, err := config.NewChatConfig(ctx)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("loading config: %v", err)
+		return
+	}
 
 	otelShutdown, err := telemetry.SetupOTelSDK(ctx, "chat", config.Version, cfg.OpenTelemtryAddress)
 	defer func() {
