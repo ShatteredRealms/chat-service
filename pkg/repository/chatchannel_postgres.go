@@ -24,18 +24,18 @@ func (p *chatChannelPostgresRepository) Create(ctx context.Context, channel *cha
 
 // Delete implements ChatChannelRepository.
 func (p *chatChannelPostgresRepository) Delete(ctx context.Context, channelId *uuid.UUID) error {
-	return p.db(ctx).Delete(&chat.Channel{}, "id = ?", channelId).Error
+	return p.db(ctx).Delete(&chat.Channel{}, channelId).Error
 }
 
 // GetAll implements ChatChannelRepository.
-func (p *chatChannelPostgresRepository) GetAll(ctx context.Context) (channels *chat.Channels, _ error) {
-	*channels = make(chat.Channels, 0)
-	return channels, p.db(ctx).Find(&channels).Error
+func (p *chatChannelPostgresRepository) GetAll(ctx context.Context) (*chat.Channels, error) {
+	channels := make(chat.Channels, 0)
+	return &channels, p.db(ctx).Find(&channels).Error
 }
 
 // GetById implements ChatChannelRepository.
 func (p *chatChannelPostgresRepository) GetById(ctx context.Context, id *uuid.UUID) (channel *chat.Channel, _ error) {
-	result := p.db(ctx).First(&channel, "id = ?", id)
+	result := p.db(ctx).First(&channel, id)
 	return channel, result.Error
 }
 
