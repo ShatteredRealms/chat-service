@@ -15,5 +15,5 @@ RUN go build \
 FROM alpine:3.15.0
 WORKDIR /app
 COPY --from=build /out/chat ./
-EXPOSE 8081
+EXPOSE 8180
 ENTRYPOINT [ "./chat" ]

@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	pb "github.com/ShatteredRealms/chat-service/pkg/pb"
+	pb0 "github.com/ShatteredRealms/go-common-service/pkg/pb"
 	gomock "go.uber.org/mock/gomock"
 	grpc "google.golang.org/grpc"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -44,7 +45,7 @@ func (m *MockChatServiceClient) EXPECT() *MockChatServiceClientMockRecorder {
 }
 
 // ConnectChatChannel mocks base method.
-func (m *MockChatServiceClient) ConnectChatChannel(ctx context.Context, in *pb.ChatChannelTarget, opts ...grpc.CallOption) (grpc.ServerStreamingClient[pb.ChatMessage], error) {
+func (m *MockChatServiceClient) ConnectChatChannel(ctx context.Context, in *pb.ConnectChatChannelRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[pb.ChatMessage], error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
@@ -64,7 +65,7 @@ func (mr *MockChatServiceClientMockRecorder) ConnectChatChannel(ctx, in any, opt
 }
 
 // ConnectDirectMessages mocks base method.
-func (m *MockChatServiceClient) ConnectDirectMessages(ctx context.Context, in *pb.CharacterTarget, opts ...grpc.CallOption) (grpc.ServerStreamingClient[pb.ChatMessage], error) {
+func (m *MockChatServiceClient) ConnectDirectMessages(ctx context.Context, in *pb0.TargetId, opts ...grpc.CallOption) (grpc.ServerStreamingClient[pb.ChatMessage], error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
@@ -104,7 +105,7 @@ func (mr *MockChatServiceClientMockRecorder) CreateChatChannel(ctx, in any, opts
 }
 
 // DeleteChatChannel mocks base method.
-func (m *MockChatServiceClient) DeleteChatChannel(ctx context.Context, in *pb.ChatChannelTarget, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (m *MockChatServiceClient) DeleteChatChannel(ctx context.Context, in *pb0.TargetId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
@@ -144,7 +145,7 @@ func (mr *MockChatServiceClientMockRecorder) EditChatChannel(ctx, in any, opts .
 }
 
 // GetAuthorizedChatChannels mocks base method.
-func (m *MockChatServiceClient) GetAuthorizedChatChannels(ctx context.Context, in *pb.CharacterTarget, opts ...grpc.CallOption) (*pb.ChatChannels, error) {
+func (m *MockChatServiceClient) GetAuthorizedChatChannels(ctx context.Context, in *pb0.TargetId, opts ...grpc.CallOption) (*pb.ChatChannels, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
@@ -164,7 +165,7 @@ func (mr *MockChatServiceClientMockRecorder) GetAuthorizedChatChannels(ctx, in a
 }
 
 // GetChatChannel mocks base method.
-func (m *MockChatServiceClient) GetChatChannel(ctx context.Context, in *pb.ChatChannelTarget, opts ...grpc.CallOption) (*pb.ChatChannel, error) {
+func (m *MockChatServiceClient) GetChatChannel(ctx context.Context, in *pb0.TargetId, opts ...grpc.CallOption) (*pb.ChatChannel, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, in}
 	for _, a := range opts {
@@ -308,7 +309,7 @@ func (m *MockChatServiceServer) EXPECT() *MockChatServiceServerMockRecorder {
 }
 
 // ConnectChatChannel mocks base method.
-func (m *MockChatServiceServer) ConnectChatChannel(arg0 *pb.ChatChannelTarget, arg1 grpc.ServerStreamingServer[pb.ChatMessage]) error {
+func (m *MockChatServiceServer) ConnectChatChannel(arg0 *pb.ConnectChatChannelRequest, arg1 grpc.ServerStreamingServer[pb.ChatMessage]) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ConnectChatChannel", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -322,7 +323,7 @@ func (mr *MockChatServiceServerMockRecorder) ConnectChatChannel(arg0, arg1 any) 
 }
 
 // ConnectDirectMessages mocks base method.
-func (m *MockChatServiceServer) ConnectDirectMessages(arg0 *pb.CharacterTarget, arg1 grpc.ServerStreamingServer[pb.ChatMessage]) error {
+func (m *MockChatServiceServer) ConnectDirectMessages(arg0 *pb0.TargetId, arg1 grpc.ServerStreamingServer[pb.ChatMessage]) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ConnectDirectMessages", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -351,7 +352,7 @@ func (mr *MockChatServiceServerMockRecorder) CreateChatChannel(arg0, arg1 any) *
 }
 
 // DeleteChatChannel mocks base method.
-func (m *MockChatServiceServer) DeleteChatChannel(arg0 context.Context, arg1 *pb.ChatChannelTarget) (*emptypb.Empty, error) {
+func (m *MockChatServiceServer) DeleteChatChannel(arg0 context.Context, arg1 *pb0.TargetId) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteChatChannel", arg0, arg1)
 	ret0, _ := ret[0].(*emptypb.Empty)
@@ -381,7 +382,7 @@ func (mr *MockChatServiceServerMockRecorder) EditChatChannel(arg0, arg1 any) *go
 }
 
 // GetAuthorizedChatChannels mocks base method.
-func (m *MockChatServiceServer) GetAuthorizedChatChannels(arg0 context.Context, arg1 *pb.CharacterTarget) (*pb.ChatChannels, error) {
+func (m *MockChatServiceServer) GetAuthorizedChatChannels(arg0 context.Context, arg1 *pb0.TargetId) (*pb.ChatChannels, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuthorizedChatChannels", arg0, arg1)
 	ret0, _ := ret[0].(*pb.ChatChannels)
@@ -396,7 +397,7 @@ func (mr *MockChatServiceServerMockRecorder) GetAuthorizedChatChannels(arg0, arg
 }
 
 // GetChatChannel mocks base method.
-func (m *MockChatServiceServer) GetChatChannel(arg0 context.Context, arg1 *pb.ChatChannelTarget) (*pb.ChatChannel, error) {
+func (m *MockChatServiceServer) GetChatChannel(arg0 context.Context, arg1 *pb0.TargetId) (*pb.ChatChannel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetChatChannel", arg0, arg1)
 	ret0, _ := ret[0].(*pb.ChatChannel)

@@ -23,7 +23,6 @@ endif
 BASE_VERSION = $(shell git describe --tags --always --abbrev=0 --match='v[0-9]*.[0-9]*.[0-9]*' 2> /dev/null | sed 's/^.//')
 COMMIT_HASH = $(shell git rev-parse --short HEAD)
 
-
 # Gets the directory containing the Makefile
 ROOT_DIR = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -37,9 +36,20 @@ time=$(shell date +%s)
 
 PROTO_DIR=$(ROOT_DIR)/api
 
-PROTO_FILES = $(shell find $(PROTO_DIR) -name '*.proto' -not -path '$(PROTO_DIR)/google/*')
+PROTO_FILES = "$(PROTO_DIR)/sro/chat/chat.proto"
 
 MOCK_INTERFACES = $(shell egrep -rl --include="*.go" "type (\w*) interface {" $(ROOT_DIR)/pkg | sed "s/.go$$//")
+
+# Versioning
+VERSION=$(BASE_VERSION)
+ifeq ($(VERSION),)
+	VERSION := 0.0.0
+endif
+
+VERSION_PARTS=$(subst ., ,$(VERSION))
+MAJOR_VERSION=$(word 1,$(VERSION_PARTS))
+MINOR_VERSION=$(word 2,$(VERSION_PARTS))
+PATCH_VERSION=$(word 3,$(VERSION_PARTS))
 
 #   _____                    _
 #  |_   _|                  | |
@@ -112,7 +122,7 @@ build-image-push: build-image push
 clean-protos:
 	rm -rf "$(ROOT_DIR)/pkg/pb"
 
-protos: clean-protos $(PROTO_FILES) mocks
+protos: clean-protos $(PROTO_FILES) move-protos mocks
 
 $(PROTO_FILES):
 	protoc "$@" \
@@ -120,7 +130,27 @@ $(PROTO_FILES):
 		--go_out="$(ROOT_DIR)" \
 		--go-grpc_out="$(ROOT_DIR)" \
 		--grpc-gateway_out="$(ROOT_DIR)" \
-		--grpc-gateway_opt "logtostderr=true"
+		--grpc-gateway_opt "logtostderr=true" \
+		--openapi_out="$(ROOT_DIR)"
+
+move-protos:
+	mv -v "$(ROOT_DIR)/github.com/ShatteredRealms/$(APP_NAME)/pkg/pb" "$(ROOT_DIR)/pkg/"
+	rm -r "$(ROOT_DIR)/github.com"
+
 
 install-tools:
 	  cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %@latest
+
+git: git-patch
+git-major:
+	git tag v$(shell echo $(MAJOR_VERSION)+1 | bc).0.0
+	git push
+	git push --tags
+git-minor:
+	git tag v$(MAJOR_VERSION).$(shell echo $(MINOR_VERSION)+1 | bc).0 
+	git push
+	git push --tags
+git-patch:
+	git tag v$(MAJOR_VERSION).$(MINOR_VERSION).$(shell echo $(PATCH_VERSION)+1 | bc)
+	git push
+	git push --tags

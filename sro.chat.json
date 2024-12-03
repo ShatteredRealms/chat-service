@@ -1,0 +1,164 @@
+{
+  "openapi": "3.0.1",
+  "components": {
+    "schemas": {
+      "sro.chat.ChatChannel": {
+        "properties": {
+          "dimensionId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.ChatChannels": {
+        "properties": {
+          "channels": {
+            "items": {
+              "properties": {
+                "dimensionId": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.ChatMessage": {
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "senderCharacterId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.ConnectChatChannelRequest": {
+        "properties": {
+          "channelId": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.CreateChatChannelMessage": {
+        "properties": {
+          "dimensionId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.RequestSetCharacterSetChatChannelAuth": {
+        "properties": {
+          "characterId": {
+            "type": "string"
+          },
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.RequestUpdateCharacterSetChatChannelAuth": {
+        "properties": {
+          "add": {
+            "type": "boolean"
+          },
+          "characterId": {
+            "type": "string"
+          },
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.SendChatChannelMessageRequest": {
+        "properties": {
+          "channelId": {
+            "type": "string"
+          },
+          "chatMessage": {
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "senderCharacterId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.SendDirectMessageRequest": {
+        "properties": {
+          "characterId": {
+            "type": "string"
+          },
+          "chatMessage": {
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "senderCharacterId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.UpdateChatChannelRequest": {
+        "properties": {
+          "channelId": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "OpenAPI Spec for Solo APIs.",
+    "version": "chat"
+  },
+  "paths": null
+}

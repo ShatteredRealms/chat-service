@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 
+	pb_0 "github.com/ShatteredRealms/go-common-service/pkg/pb"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/utilities"
 	"google.golang.org/grpc"
@@ -36,19 +37,27 @@ var (
 	_ = metadata.Join
 )
 
+var filter_ChatService_ConnectChatChannel_0 = &utilities.DoubleArray{Encoding: map[string]int{"channel_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+
 func request_ChatService_ConnectChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (ChatService_ConnectChatChannelClient, runtime.ServerMetadata, error) {
 	var (
-		protoReq ChatChannelTarget
+		protoReq ConnectChatChannelRequest
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["id"]
+	val, ok := pathParams["channel_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
 	}
-	protoReq.Id, err = runtime.Uint64(val)
+	protoReq.ChannelId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_ConnectChatChannel_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	stream, err := client.ConnectChatChannel(ctx, &protoReq)
 	if err != nil {
@@ -62,50 +71,9 @@ func request_ChatService_ConnectChatChannel_0(ctx context.Context, marshaler run
 	return stream, metadata, nil
 }
 
-var filter_ChatService_ConnectDirectMessages_0 = &utilities.DoubleArray{Encoding: map[string]int{"name": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-
 func request_ChatService_ConnectDirectMessages_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (ChatService_ConnectDirectMessagesClient, runtime.ServerMetadata, error) {
 	var (
-		protoReq CharacterTarget
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
-	}
-	if protoReq.Target == nil {
-		protoReq.Target = &CharacterTarget_Name{}
-	} else if _, ok := protoReq.Target.(*CharacterTarget_Name); !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "expect type: *CharacterTarget_Name, but: %t\n", protoReq.Target)
-	}
-	protoReq.Target.(*CharacterTarget_Name).Name, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_ConnectDirectMessages_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	stream, err := client.ConnectDirectMessages(ctx, &protoReq)
-	if err != nil {
-		return nil, metadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, metadata, err
-	}
-	metadata.HeaderMD = header
-	return stream, metadata, nil
-}
-
-var filter_ChatService_ConnectDirectMessages_1 = &utilities.DoubleArray{Encoding: map[string]int{"id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-
-func request_ChatService_ConnectDirectMessages_1(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (ChatService_ConnectDirectMessagesClient, runtime.ServerMetadata, error) {
-	var (
-		protoReq CharacterTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -113,20 +81,9 @@ func request_ChatService_ConnectDirectMessages_1(ctx context.Context, marshaler 
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	if protoReq.Target == nil {
-		protoReq.Target = &CharacterTarget_Id{}
-	} else if _, ok := protoReq.Target.(*CharacterTarget_Id); !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "expect type: *CharacterTarget_Id, but: %t\n", protoReq.Target)
-	}
-	protoReq.Target.(*CharacterTarget_Id).Id, err = runtime.String(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_ConnectDirectMessages_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	stream, err := client.ConnectDirectMessages(ctx, &protoReq)
 	if err != nil {
@@ -149,13 +106,13 @@ func request_ChatService_SendChatChannelMessage_0(ctx context.Context, marshaler
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["target.id"]
+	val, ok := pathParams["channel_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.id", val)
+	protoReq.ChannelId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
 	}
 	msg, err := client.SendChatChannelMessage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -170,13 +127,13 @@ func local_request_ChatService_SendChatChannelMessage_0(ctx context.Context, mar
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["target.id"]
+	val, ok := pathParams["channel_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.id", val)
+	protoReq.ChannelId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
 	}
 	msg, err := server.SendChatChannelMessage(ctx, &protoReq)
 	return msg, metadata, err
@@ -191,13 +148,13 @@ func request_ChatService_SendDirectMessage_0(ctx context.Context, marshaler runt
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["target.name"]
+	val, ok := pathParams["character_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.name", val)
+	protoReq.CharacterId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
 	}
 	msg, err := client.SendDirectMessage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -212,63 +169,13 @@ func local_request_ChatService_SendDirectMessage_0(ctx context.Context, marshale
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["target.name"]
+	val, ok := pathParams["character_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.name", val)
+	protoReq.CharacterId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.name", err)
-	}
-	msg, err := server.SendDirectMessage(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-var filter_ChatService_SendDirectMessage_1 = &utilities.DoubleArray{Encoding: map[string]int{"target": 0, "id": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-
-func request_ChatService_SendDirectMessage_1(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq SendDirectMessageRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["target.id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.id")
-	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.id", val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_SendDirectMessage_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := client.SendDirectMessage(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChatService_SendDirectMessage_1(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq SendDirectMessageRequest
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["target.id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.id")
-	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.id", val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_SendDirectMessage_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
 	}
 	msg, err := server.SendDirectMessage(ctx, &protoReq)
 	return msg, metadata, err
@@ -294,7 +201,7 @@ func local_request_ChatService_GetChatChannels_0(ctx context.Context, marshaler 
 
 func request_ChatService_GetChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ChatChannelTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -302,7 +209,7 @@ func request_ChatService_GetChatChannel_0(ctx context.Context, marshaler runtime
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Id, err = runtime.Uint64(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
@@ -312,7 +219,7 @@ func request_ChatService_GetChatChannel_0(ctx context.Context, marshaler runtime
 
 func local_request_ChatService_GetChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ChatChannelTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -320,7 +227,7 @@ func local_request_ChatService_GetChatChannel_0(ctx context.Context, marshaler r
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Id, err = runtime.Uint64(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
@@ -354,7 +261,7 @@ func local_request_ChatService_CreateChatChannel_0(ctx context.Context, marshale
 
 func request_ChatService_DeleteChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ChatChannelTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -362,7 +269,7 @@ func request_ChatService_DeleteChatChannel_0(ctx context.Context, marshaler runt
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Id, err = runtime.Uint64(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
@@ -372,7 +279,7 @@ func request_ChatService_DeleteChatChannel_0(ctx context.Context, marshaler runt
 
 func local_request_ChatService_DeleteChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq ChatChannelTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -380,7 +287,7 @@ func local_request_ChatService_DeleteChatChannel_0(ctx context.Context, marshale
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	protoReq.Id, err = runtime.Uint64(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
@@ -397,13 +304,13 @@ func request_ChatService_EditChatChannel_0(ctx context.Context, marshaler runtim
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["target.id"]
+	val, ok := pathParams["channel_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.id", val)
+	protoReq.ChannelId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
 	}
 	msg, err := client.EditChatChannel(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -418,44 +325,31 @@ func local_request_ChatService_EditChatChannel_0(ctx context.Context, marshaler 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && !errors.Is(err, io.EOF) {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	val, ok := pathParams["target.id"]
+	val, ok := pathParams["channel_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "target.id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "target.id", val)
+	protoReq.ChannelId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "target.id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
 	}
 	msg, err := server.EditChatChannel(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-var filter_ChatService_GetAuthorizedChatChannels_0 = &utilities.DoubleArray{Encoding: map[string]int{"name": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-
 func request_ChatService_GetAuthorizedChatChannels_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CharacterTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["name"]
+	val, ok := pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	if protoReq.Target == nil {
-		protoReq.Target = &CharacterTarget_Name{}
-	} else if _, ok := protoReq.Target.(*CharacterTarget_Name); !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "expect type: *CharacterTarget_Name, but: %t\n", protoReq.Target)
-	}
-	protoReq.Target.(*CharacterTarget_Name).Name, err = runtime.String(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_GetAuthorizedChatChannels_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 	msg, err := client.GetAuthorizedChatChannels(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -463,38 +357,7 @@ func request_ChatService_GetAuthorizedChatChannels_0(ctx context.Context, marsha
 
 func local_request_ChatService_GetAuthorizedChatChannels_0(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq CharacterTarget
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
-	}
-	if protoReq.Target == nil {
-		protoReq.Target = &CharacterTarget_Name{}
-	} else if _, ok := protoReq.Target.(*CharacterTarget_Name); !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "expect type: *CharacterTarget_Name, but: %t\n", protoReq.Target)
-	}
-	protoReq.Target.(*CharacterTarget_Name).Name, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_GetAuthorizedChatChannels_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.GetAuthorizedChatChannels(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-var filter_ChatService_GetAuthorizedChatChannels_1 = &utilities.DoubleArray{Encoding: map[string]int{"id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-
-func request_ChatService_GetAuthorizedChatChannels_1(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq CharacterTarget
+		protoReq pb_0.TargetId
 		metadata runtime.ServerMetadata
 		err      error
 	)
@@ -502,55 +365,15 @@ func request_ChatService_GetAuthorizedChatChannels_1(ctx context.Context, marsha
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
-	if protoReq.Target == nil {
-		protoReq.Target = &CharacterTarget_Id{}
-	} else if _, ok := protoReq.Target.(*CharacterTarget_Id); !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "expect type: *CharacterTarget_Id, but: %t\n", protoReq.Target)
-	}
-	protoReq.Target.(*CharacterTarget_Id).Id, err = runtime.String(val)
+	protoReq.Id, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_GetAuthorizedChatChannels_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := client.GetAuthorizedChatChannels(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChatService_GetAuthorizedChatChannels_1(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq CharacterTarget
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
-	}
-	if protoReq.Target == nil {
-		protoReq.Target = &CharacterTarget_Id{}
-	} else if _, ok := protoReq.Target.(*CharacterTarget_Id); !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "expect type: *CharacterTarget_Id, but: %t\n", protoReq.Target)
-	}
-	protoReq.Target.(*CharacterTarget_Id).Id, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_GetAuthorizedChatChannels_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.GetAuthorizedChatChannels(ctx, &protoReq)
 	return msg, metadata, err
 }
 
-var filter_ChatService_SetCharacterChatChannelAuth_0 = &utilities.DoubleArray{Encoding: map[string]int{"character": 0, "name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+var filter_ChatService_SetCharacterChatChannelAuth_0 = &utilities.DoubleArray{Encoding: map[string]int{"character_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
 func request_ChatService_SetCharacterChatChannelAuth_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
@@ -558,13 +381,13 @@ func request_ChatService_SetCharacterChatChannelAuth_0(ctx context.Context, mars
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["character.name"]
+	val, ok := pathParams["character_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.name", val)
+	protoReq.CharacterId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
 	}
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -582,13 +405,13 @@ func local_request_ChatService_SetCharacterChatChannelAuth_0(ctx context.Context
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["character.name"]
+	val, ok := pathParams["character_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.name", val)
+	protoReq.CharacterId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
 	}
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -600,57 +423,7 @@ func local_request_ChatService_SetCharacterChatChannelAuth_0(ctx context.Context
 	return msg, metadata, err
 }
 
-var filter_ChatService_SetCharacterChatChannelAuth_1 = &utilities.DoubleArray{Encoding: map[string]int{"character": 0, "id": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-
-func request_ChatService_SetCharacterChatChannelAuth_1(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq RequestSetCharacterSetChatChannelAuth
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["character.id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.id")
-	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.id", val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_SetCharacterChatChannelAuth_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := client.SetCharacterChatChannelAuth(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChatService_SetCharacterChatChannelAuth_1(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq RequestSetCharacterSetChatChannelAuth
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["character.id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.id")
-	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.id", val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_SetCharacterChatChannelAuth_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.SetCharacterChatChannelAuth(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-var filter_ChatService_UpdateCharacterChatChannelAuth_0 = &utilities.DoubleArray{Encoding: map[string]int{"character": 0, "name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
+var filter_ChatService_UpdateCharacterChatChannelAuth_0 = &utilities.DoubleArray{Encoding: map[string]int{"character_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 
 func request_ChatService_UpdateCharacterChatChannelAuth_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
@@ -658,13 +431,13 @@ func request_ChatService_UpdateCharacterChatChannelAuth_0(ctx context.Context, m
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["character.name"]
+	val, ok := pathParams["character_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.name", val)
+	protoReq.CharacterId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
 	}
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -682,68 +455,18 @@ func local_request_ChatService_UpdateCharacterChatChannelAuth_0(ctx context.Cont
 		metadata runtime.ServerMetadata
 		err      error
 	)
-	val, ok := pathParams["character.name"]
+	val, ok := pathParams["character_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.name")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
 	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.name", val)
+	protoReq.CharacterId, err = runtime.String(val)
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.name", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
 	}
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_UpdateCharacterChatChannelAuth_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := server.UpdateCharacterChatChannelAuth(ctx, &protoReq)
-	return msg, metadata, err
-}
-
-var filter_ChatService_UpdateCharacterChatChannelAuth_1 = &utilities.DoubleArray{Encoding: map[string]int{"character": 0, "id": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-
-func request_ChatService_UpdateCharacterChatChannelAuth_1(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq RequestUpdateCharacterSetChatChannelAuth
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["character.id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.id")
-	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.id", val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_UpdateCharacterChatChannelAuth_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	msg, err := client.UpdateCharacterChatChannelAuth(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_ChatService_UpdateCharacterChatChannelAuth_1(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq RequestUpdateCharacterSetChatChannelAuth
-		metadata runtime.ServerMetadata
-		err      error
-	)
-	val, ok := pathParams["character.id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character.id")
-	}
-	err = runtime.PopulateFieldFromPath(&protoReq, "character.id", val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character.id", err)
-	}
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_UpdateCharacterChatChannelAuth_1); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	msg, err := server.UpdateCharacterChatChannelAuth(ctx, &protoReq)
@@ -769,20 +492,13 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 		return
 	})
-
-	mux.Handle(http.MethodGet, pattern_ChatService_ConnectDirectMessages_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
-		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-		return
-	})
 	mux.Handle(http.MethodPut, pattern_ChatService_SendChatChannelMessage_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SendChatChannelMessage", runtime.WithHTTPPathPattern("/v1/message/channel/id/{target.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SendChatChannelMessage", runtime.WithHTTPPathPattern("/v1/message/channel/id/{channel_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -802,7 +518,7 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SendDirectMessage", runtime.WithHTTPPathPattern("/v1/message/character/name/{target.name}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SendDirectMessage", runtime.WithHTTPPathPattern("/v1/message/character/id/{character_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -815,26 +531,6 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_ChatService_SendDirectMessage_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPut, pattern_ChatService_SendDirectMessage_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SendDirectMessage", runtime.WithHTTPPathPattern("/v1/message/character/name/{target.id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChatService_SendDirectMessage_1(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_SendDirectMessage_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_ChatService_GetChatChannels_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -922,7 +618,7 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/EditChatChannel", runtime.WithHTTPPathPattern("/v1/channels/id/{target.id}"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/EditChatChannel", runtime.WithHTTPPathPattern("/v1/channels/id/{channel_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -942,7 +638,7 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/GetAuthorizedChatChannels", runtime.WithHTTPPathPattern("/v1/character/name/{name}/channels"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/GetAuthorizedChatChannels", runtime.WithHTTPPathPattern("/v1/character/id/{id}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -956,33 +652,13 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_GetAuthorizedChatChannels_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_ChatService_GetAuthorizedChatChannels_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/GetAuthorizedChatChannels", runtime.WithHTTPPathPattern("/v1/character/id/{id}/channels"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChatService_GetAuthorizedChatChannels_1(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_GetAuthorizedChatChannels_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_ChatService_SetCharacterChatChannelAuth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SetCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/name/{character.name}/channels"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SetCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character_id}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -996,33 +672,13 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_SetCharacterChatChannelAuth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_ChatService_SetCharacterChatChannelAuth_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/SetCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character.id}/channels"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChatService_SetCharacterChatChannelAuth_1(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_SetCharacterChatChannelAuth_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPut, pattern_ChatService_UpdateCharacterChatChannelAuth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/UpdateCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/name/{character.name}/channels"))
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/UpdateCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character_id}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1035,26 +691,6 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_ChatService_UpdateCharacterChatChannelAuth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPut, pattern_ChatService_UpdateCharacterChatChannelAuth_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/UpdateCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character.id}/channels"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_ChatService_UpdateCharacterChatChannelAuth_1(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_UpdateCharacterChatChannelAuth_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -1100,7 +736,7 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/ConnectChatChannel", runtime.WithHTTPPathPattern("/v1/message/channel/id/{id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/ConnectChatChannel", runtime.WithHTTPPathPattern("/v1/message/channel/id/{channel_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1117,7 +753,7 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/ConnectDirectMessages", runtime.WithHTTPPathPattern("/v1/message/character/name/{name}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/ConnectDirectMessages", runtime.WithHTTPPathPattern("/v1/message/character/id/{id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1130,28 +766,11 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_ConnectDirectMessages_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_ChatService_ConnectDirectMessages_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/ConnectDirectMessages", runtime.WithHTTPPathPattern("/v1/message/character/id/{id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChatService_ConnectDirectMessages_1(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_ConnectDirectMessages_1(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPut, pattern_ChatService_SendChatChannelMessage_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SendChatChannelMessage", runtime.WithHTTPPathPattern("/v1/message/channel/id/{target.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SendChatChannelMessage", runtime.WithHTTPPathPattern("/v1/message/channel/id/{channel_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1168,7 +787,7 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SendDirectMessage", runtime.WithHTTPPathPattern("/v1/message/character/name/{target.name}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SendDirectMessage", runtime.WithHTTPPathPattern("/v1/message/character/id/{character_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1180,23 +799,6 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_ChatService_SendDirectMessage_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
-	mux.Handle(http.MethodPut, pattern_ChatService_SendDirectMessage_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SendDirectMessage", runtime.WithHTTPPathPattern("/v1/message/character/name/{target.id}"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChatService_SendDirectMessage_1(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_SendDirectMessage_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_ChatService_GetChatChannels_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -1270,7 +872,7 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/EditChatChannel", runtime.WithHTTPPathPattern("/v1/channels/id/{target.id}"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/EditChatChannel", runtime.WithHTTPPathPattern("/v1/channels/id/{channel_id}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1287,7 +889,7 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/GetAuthorizedChatChannels", runtime.WithHTTPPathPattern("/v1/character/name/{name}/channels"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/GetAuthorizedChatChannels", runtime.WithHTTPPathPattern("/v1/character/id/{id}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1300,28 +902,11 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_GetAuthorizedChatChannels_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodGet, pattern_ChatService_GetAuthorizedChatChannels_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/GetAuthorizedChatChannels", runtime.WithHTTPPathPattern("/v1/character/id/{id}/channels"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChatService_GetAuthorizedChatChannels_1(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_GetAuthorizedChatChannels_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPost, pattern_ChatService_SetCharacterChatChannelAuth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SetCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/name/{character.name}/channels"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SetCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character_id}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1334,28 +919,11 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_SetCharacterChatChannelAuth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPost, pattern_ChatService_SetCharacterChatChannelAuth_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/SetCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character.id}/channels"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChatService_SetCharacterChatChannelAuth_1(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_SetCharacterChatChannelAuth_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	mux.Handle(http.MethodPut, pattern_ChatService_UpdateCharacterChatChannelAuth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/UpdateCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/name/{character.name}/channels"))
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/UpdateCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character_id}/channels"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -1368,62 +936,35 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_UpdateCharacterChatChannelAuth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
-	mux.Handle(http.MethodPut, pattern_ChatService_UpdateCharacterChatChannelAuth_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/UpdateCharacterChatChannelAuth", runtime.WithHTTPPathPattern("/v1/characters/id/{character.id}/channels"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := request_ChatService_UpdateCharacterChatChannelAuth_1(annotatedContext, inboundMarshaler, client, req, pathParams)
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_ChatService_UpdateCharacterChatChannelAuth_1(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-	})
 	return nil
 }
 
 var (
-	pattern_ChatService_ConnectChatChannel_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"v1", "message", "channel", "id"}, ""))
-	pattern_ChatService_ConnectDirectMessages_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"v1", "message", "character", "name"}, ""))
-	pattern_ChatService_ConnectDirectMessages_1          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"v1", "message", "character", "id"}, ""))
-	pattern_ChatService_SendChatChannelMessage_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "message", "channel", "id", "target.id"}, ""))
-	pattern_ChatService_SendDirectMessage_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "message", "character", "name", "target.name"}, ""))
-	pattern_ChatService_SendDirectMessage_1              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "message", "character", "name", "target.id"}, ""))
+	pattern_ChatService_ConnectChatChannel_0             = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "message", "channel", "id", "channel_id"}, ""))
+	pattern_ChatService_ConnectDirectMessages_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 3}, []string{"v1", "message", "character", "id"}, ""))
+	pattern_ChatService_SendChatChannelMessage_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "message", "channel", "id", "channel_id"}, ""))
+	pattern_ChatService_SendDirectMessage_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v1", "message", "character", "id", "character_id"}, ""))
 	pattern_ChatService_GetChatChannels_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "channels"}, ""))
 	pattern_ChatService_GetChatChannel_0                 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2}, []string{"v1", "channels", "id"}, ""))
 	pattern_ChatService_CreateChatChannel_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "channels"}, ""))
 	pattern_ChatService_DeleteChatChannel_0              = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2}, []string{"v1", "channels", "id"}, ""))
-	pattern_ChatService_EditChatChannel_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "channels", "id", "target.id"}, ""))
-	pattern_ChatService_GetAuthorizedChatChannels_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "character", "name", "channels"}, ""))
-	pattern_ChatService_GetAuthorizedChatChannels_1      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "character", "id", "channels"}, ""))
-	pattern_ChatService_SetCharacterChatChannelAuth_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "name", "character.name", "channels"}, ""))
-	pattern_ChatService_SetCharacterChatChannelAuth_1    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "id", "character.id", "channels"}, ""))
-	pattern_ChatService_UpdateCharacterChatChannelAuth_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "name", "character.name", "channels"}, ""))
-	pattern_ChatService_UpdateCharacterChatChannelAuth_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "id", "character.id", "channels"}, ""))
+	pattern_ChatService_EditChatChannel_0                = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "channels", "id", "channel_id"}, ""))
+	pattern_ChatService_GetAuthorizedChatChannels_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "character", "id", "channels"}, ""))
+	pattern_ChatService_SetCharacterChatChannelAuth_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "id", "character_id", "channels"}, ""))
+	pattern_ChatService_UpdateCharacterChatChannelAuth_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "id", "character_id", "channels"}, ""))
 )
 
 var (
 	forward_ChatService_ConnectChatChannel_0             = runtime.ForwardResponseStream
 	forward_ChatService_ConnectDirectMessages_0          = runtime.ForwardResponseStream
-	forward_ChatService_ConnectDirectMessages_1          = runtime.ForwardResponseStream
 	forward_ChatService_SendChatChannelMessage_0         = runtime.ForwardResponseMessage
 	forward_ChatService_SendDirectMessage_0              = runtime.ForwardResponseMessage
-	forward_ChatService_SendDirectMessage_1              = runtime.ForwardResponseMessage
 	forward_ChatService_GetChatChannels_0                = runtime.ForwardResponseMessage
 	forward_ChatService_GetChatChannel_0                 = runtime.ForwardResponseMessage
 	forward_ChatService_CreateChatChannel_0              = runtime.ForwardResponseMessage
 	forward_ChatService_DeleteChatChannel_0              = runtime.ForwardResponseMessage
 	forward_ChatService_EditChatChannel_0                = runtime.ForwardResponseMessage
 	forward_ChatService_GetAuthorizedChatChannels_0      = runtime.ForwardResponseMessage
-	forward_ChatService_GetAuthorizedChatChannels_1      = runtime.ForwardResponseMessage
 	forward_ChatService_SetCharacterChatChannelAuth_0    = runtime.ForwardResponseMessage
-	forward_ChatService_SetCharacterChatChannelAuth_1    = runtime.ForwardResponseMessage
 	forward_ChatService_UpdateCharacterChatChannelAuth_0 = runtime.ForwardResponseMessage
-	forward_ChatService_UpdateCharacterChatChannelAuth_1 = runtime.ForwardResponseMessage
 )

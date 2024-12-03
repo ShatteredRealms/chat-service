@@ -4,15 +4,18 @@ import (
 	"context"
 
 	cconfig "github.com/ShatteredRealms/go-common-service/pkg/config"
+	"github.com/sirupsen/logrus"
 )
 
 var (
-	Version = "v1.0.0"
+	Version     = "v1.0.0"
+	ServiceName = "ChatService"
 )
 
 type ChatConfig struct {
 	cconfig.BaseConfig `yaml:",inline" chatstructure:",squash"`
 	Postgres           cconfig.DBPoolConfig `yaml:"postgres"`
+	Redis              cconfig.DBPoolConfig `yaml:"redis"`
 }
 
 func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
@@ -23,22 +26,39 @@ func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
 				Port: "8085",
 			},
 			Keycloak: cconfig.KeycloakConfig{
-				BaseURL:      "localhost:8080",
+				BaseURL:      "http://localhost:8080",
 				Realm:        "default",
-				Id:           "7b575e9b-c687-4cdc-b210-67c59b5f380f",
+				Id:           "a677cb5c-f24d-4f2e-aedd-b2f5387078e9",
 				ClientId:     "sro-chat-service",
 				ClientSecret: "**********",
 			},
 			Mode:                "local",
-			LogLevel:            0,
+			LogLevel:            logrus.InfoLevel,
 			OpenTelemtryAddress: "localhost:4317",
+			Kafka: cconfig.ServerAddresses{
+				{
+					Host: "localhost",
+					Port: "29092",
+				},
+			},
 		},
 		Postgres: cconfig.DBPoolConfig{
 			Master: cconfig.DBConfig{
-				ServerAddress: cconfig.ServerAddress{},
-				Name:          "chat-service",
-				Username:      "postgres",
-				Password:      "password",
+				ServerAddress: cconfig.ServerAddress{
+					Host: "localhost",
+					Port: "5432",
+				},
+				Name:     "chat_service",
+				Username: "postgres",
+				Password: "password",
+			},
+		},
+		Redis: cconfig.DBPoolConfig{
+			Master: cconfig.DBConfig{
+				ServerAddress: cconfig.ServerAddress{
+					Host: "localhost",
+					Port: "7000",
+				},
 			},
 		},
 	}
