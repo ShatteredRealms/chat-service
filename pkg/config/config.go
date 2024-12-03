@@ -23,7 +23,7 @@ func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
 		BaseConfig: cconfig.BaseConfig{
 			Server: cconfig.ServerAddress{
 				Host: "localhost",
-				Port: "8085",
+				Port: "8180",
 			},
 			Keycloak: cconfig.KeycloakConfig{
 				BaseURL:      "http://localhost:8080",

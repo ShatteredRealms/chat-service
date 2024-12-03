@@ -29,6 +29,7 @@ func (p *chatChannelPostgresRepository) Delete(ctx context.Context, channelId *u
 
 // GetAll implements ChatChannelRepository.
 func (p *chatChannelPostgresRepository) GetAll(ctx context.Context) (channels *chat.Channels, _ error) {
+	*channels = make(chat.Channels, 0)
 	return channels, p.db(ctx).Find(&channels).Error
 }
 

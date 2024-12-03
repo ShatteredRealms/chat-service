@@ -155,6 +155,15 @@ func (s *chatServiceServer) CreateChatChannel(ctx context.Context, request *pb.C
 		return nil, err
 	}
 
+	dimension, err := s.Context.DimensionService.GetDimensionById(ctx, request.DimensionId)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrDimensionLookup, err)
+		return nil, status.Error(codes.Internal, ErrDimensionLookup.Error())
+	}
+	if dimension == nil {
+		return nil, status.Error(codes.InvalidArgument, ErrDimensionNotExist.Error())
+	}
+
 	_, err = s.Context.ChatChannelService.Create(ctx, request.Name, request.DimensionId)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatCreate, err)
