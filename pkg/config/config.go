@@ -13,9 +13,10 @@ var (
 )
 
 type ChatConfig struct {
-	cconfig.BaseConfig `yaml:",inline" chatstructure:",squash"`
-	Postgres           cconfig.DBPoolConfig `yaml:"postgres"`
-	Redis              cconfig.DBPoolConfig `yaml:"redis"`
+	cconfig.BaseConfig    `yaml:",inline" chatstructure:",squash"`
+	Postgres              cconfig.DBConfig     `yaml:"postgres"`
+	Redis                 cconfig.DBPoolConfig `yaml:"redis"`
+	PostgresMigrationPath string               `yaml:"postgres_migration_path"`
 }
 
 func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
@@ -42,16 +43,14 @@ func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
 				},
 			},
 		},
-		Postgres: cconfig.DBPoolConfig{
-			Master: cconfig.DBConfig{
-				ServerAddress: cconfig.ServerAddress{
-					Host: "localhost",
-					Port: "5432",
-				},
-				Name:     "chat_service",
-				Username: "postgres",
-				Password: "password",
+		Postgres: cconfig.DBConfig{
+			ServerAddress: cconfig.ServerAddress{
+				Host: "localhost",
+				Port: "5432",
 			},
+			Name:     "chat_service",
+			Username: "postgres",
+			Password: "password",
 		},
 		Redis: cconfig.DBPoolConfig{
 			Master: cconfig.DBConfig{
@@ -61,6 +60,7 @@ func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
 				},
 			},
 		},
+		PostgresMigrationPath: "migrations",
 	}
 
 	err := cconfig.BindConfigEnvs(ctx, "sro-chat", config)

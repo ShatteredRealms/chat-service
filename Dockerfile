@@ -9,11 +9,13 @@ COPY . .
 ARG APP_VERSION=v0.0.1
 RUN go build \
 	-ldflags="-X 'github.com/ShatteredRealms/chat-service/pkg/config/default.Version=${APP_VERSION}'" \
-	-o /out/chat ./cmd/chat
+	-o /out/chat ./cmd/chat-service
 
 # Run server
 FROM alpine:3.15.0
 WORKDIR /app
 COPY --from=build /out/chat ./
-EXPOSE 8180
+COPY ./migrations ./migrations
+EXPOSE 8081
 ENTRYPOINT [ "./chat" ]
+

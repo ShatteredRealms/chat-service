@@ -23,6 +23,8 @@ endif
 BASE_VERSION = $(shell git describe --tags --always --abbrev=0 --match='v[0-9]*.[0-9]*.[0-9]*' 2> /dev/null | sed 's/^.//')
 COMMIT_HASH = $(shell git rev-parse --short HEAD)
 
+COVERAGE_FILE=coverage.out
+
 # Gets the directory containing the Makefile
 ROOT_DIR = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
@@ -59,34 +61,31 @@ PATCH_VERSION=$(word 3,$(VERSION_PARTS))
 #    \_/\__,_|_|  \__, |\___|\__|___/
 #                  __/ |
 #                 |___/
-
 .PHONY: test report mocks clean-mocks report-watch $(APP_NAME)
 test:
-	ginkgo --race -p --cover -covermode atomic -coverprofile=coverage.out --output-dir $(ROOT_DIR)/ $(ROOT_DIR)/pkg/...
+	ginkgo --randomize-all -p --cover -covermode atomic -coverprofile=$(COVERAGE_FILE) --output-dir $(ROOT_DIR)/ --output-interceptor-mode=none $(ROOT_DIR)/pkg/...
 
 test-watch:
-	ginkgo watch --race -p --cover -covermode atomic -output-dir=$(ROOT_DIR) $(ROOT_DIR)/...
+	ginkgo watch --randomize-all -p --cover -covermode atomic -coverprofile=$(COVERAGE_FILE) -output-dir=$(ROOT_DIR) $(ROOT_DIR)/...
 
 report: test
-	go tool cover -func=$(ROOT_DIR)/coverage.out
-	go tool cover -html=$(ROOT_DIR)/coverage.out
+	go tool cover -func=$(ROOT_DIR)/$(COVERAGE_FILE) -o $(ROOT_DIR)/coverage.txt
+	go tool cover -html=$(ROOT_DIR)/$(COVERAGE_FILE) -o $(ROOT_DIR)/coverage.html
 
 report-watch:
-	while inotifywait -e close_write $(ROOT_DIR)/coverage.out; do \
-		go tool cover -func=$(ROOT_DIR)/coverage.out; \
-		go tool cover -html=$(ROOT_DIR)/coverage.out; \
+	while inotifywait -e close_write $(ROOT_DIR)/$(COVERAGE_FILE); do \
+		go tool cover -func=$(ROOT_DIR)/$(COVERAGE_FILE) -o $(ROOT_DIR)/coverage.txt; \
+		go tool cover -html=$(ROOT_DIR)/$(COVERAGE_FILE) -o $(ROOT_DIR)/coverage.html; \
 	done
 
 dev-watch: test-watch report-watch
 
-clean-mocks:
-	rm -rf $(ROOT_DIR)/pkg/mocks
 
-mocks: clean-mocks
-	mkdir -p $(ROOT_DIR)/pkg/mocks
-	@for file in $(MOCK_INTERFACES); do \
-		mockgen -package=mocks -source=$${file}.go -destination="$(ROOT_DIR)/pkg/mocks/$${file##*/}_mock.go"; \
-	done
+mocks: $(MOCK_INTERFACES)
+$(MOCK_INTERFACES):
+	mockgen \
+		-source="$@.go" \
+		-destination="$(@D)/mocks/$(@F).go"
 
 build: 
 	go build -ldflags="-X 'github.com/ShatteredRealms/$(APP_NAME)/pkg/config/default.Version=$(BASE_VERSION)'" -o $(ROOT_DIR)/bin/$(APP_NAME) $(ROOT_DIR)/cmd/$(APP_NAME)  
@@ -100,7 +99,7 @@ run-watch:
 deploy: aws-docker-login push
 
 docker:
-	docker build --build-arg APP_VERSION=$(BASE_VERSION) -t sro-$(APP_NAME) -f build/$(APP_NAME).Dockerfile .
+	docker build --build-arg APP_VERSION=$(BASE_VERSION) -t sro-$(APP_NAME) -f Dockerfile .
 
 aws-docker-login:
 	aws ecr get-login-password | docker login --username AWS --password-stdin $(SRO_BASE_REGISTRY)

@@ -42,6 +42,11 @@ var (
 		Name:        gocloak.StringP("chat.direct.use"),
 		Description: gocloak.StringP("Allows reading and sending direct chat messages to others as yourself"),
 	}, &ChatRoles)
+
+	RoleChatBusReset = util.RegisterRole(&gocloak.Role{
+		Name:        gocloak.StringP("chat.bus.reset"),
+		Description: gocloak.StringP("Allows resetting the chat bus to reprocess all messages"),
+	}, &ChatRoles)
 )
 
 var (
@@ -241,8 +246,8 @@ func (s *chatServiceServer) GetChatChannel(ctx context.Context, request *commonp
 
 	channel, err := s.Context.ChatChannelService.GetById(ctx, &id)
 	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatDelete, err)
-		return nil, ErrChatDelete
+		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatGet, err)
+		return nil, ErrChatGet
 	}
 
 	if channel == nil {
@@ -261,8 +266,8 @@ func (s *chatServiceServer) GetChatChannels(ctx context.Context, _ *emptypb.Empt
 
 	channels, err := s.Context.ChatChannelService.GetAll(ctx)
 	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatDelete, err)
-		return nil, ErrChatDelete
+		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatGet, err)
+		return nil, ErrChatGet
 	}
 
 	return channels.ToPb(), nil
@@ -399,7 +404,7 @@ func (s *chatServiceServer) validateChannelPermissions(
 	}
 
 	// Validate character has perssions to access channel
-	ok, err := s.Context.ChatChannelPermissionService.HasAccess(ctx, channel.Id, characterId)
+	ok, err := s.Context.ChatChannelPermissionService.HasAccess(ctx, &channel.Id, characterId)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatPermissionGet, err)
 		return nil, nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
@@ -412,7 +417,7 @@ func (s *chatServiceServer) validateChannelPermissions(
 		return nil, nil, srv.ErrPermissionDenied
 	}
 
-	return claims, channel.Id, nil
+	return claims, &channel.Id, nil
 }
 
 func (s *chatServiceServer) getChatChannel(ctx context.Context, channelId string) (*chat.Channel, error) {

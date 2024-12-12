@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"sync"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/ShatteredRealms/go-common-service/pkg/log"
@@ -15,26 +17,69 @@ type ChatService interface {
 
 	SendChannelMessage(ctx context.Context, channelId *uuid.UUID, msg *chat.Message) error
 	SendDirectMessage(ctx context.Context, targetCharacterId string, msg *chat.Message) error
+
+	Shutdown(ctx context.Context) error
 }
 
 type chatService struct {
-	kafkaBrokers []string
+	kafkaBrokers       []string
+	openChannelReaders map[uuid.UUID]map[string]*kafka.Reader
+
+	shuttingDown bool
+
+	mu sync.Mutex
+	wg sync.WaitGroup
+}
+
+// Shutdown implements ChatService.
+func (s *chatService) Shutdown(ctx context.Context) error {
+	s.shuttingDown = true
+	s.wg.Wait()
+
+	var errs error
+	for _, readers := range s.openChannelReaders {
+		for _, reader := range readers {
+			err := reader.Close()
+			if err != nil {
+				errs = errors.Join(errs, err)
+			}
+		}
+	}
+
+	s.shuttingDown = false
+	return errs
 }
 
 func NewChatService(kafkaBrokers []string) ChatService {
 	return &chatService{
-		kafkaBrokers: kafkaBrokers,
+		kafkaBrokers:       kafkaBrokers,
+		openChannelReaders: make(map[uuid.UUID]map[string]*kafka.Reader),
 	}
 }
 
 // ReceiveChannelMessage implements ChatService.
 func (s *chatService) ReceiveChannelMessage(ctx context.Context, channelId *uuid.UUID, receiverCharacterId string) (*chat.Message, error) {
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: s.kafkaBrokers,
-		GroupID: receiverCharacterId,
-		Topic:   getTopicForChannel(channelId),
-		Logger:  kafka.LoggerFunc(log.Logger.Tracef),
-	})
+	if s.shuttingDown {
+		return nil, errors.New("service is shutting down")
+	}
+	s.wg.Add(1)
+	defer s.wg.Done()
+
+	reader, ok := s.openChannelReaders[*channelId][receiverCharacterId]
+	if !ok {
+		reader = kafka.NewReader(kafka.ReaderConfig{
+			Brokers: s.kafkaBrokers,
+			GroupID: receiverCharacterId,
+			Topic:   getTopicForChannel(channelId),
+			Logger:  kafka.LoggerFunc(log.Logger.Tracef),
+		})
+		s.mu.Lock()
+		if _, ok := s.openChannelReaders[*channelId]; !ok {
+			s.openChannelReaders[*channelId] = make(map[string]*kafka.Reader)
+		}
+		s.openChannelReaders[*channelId][receiverCharacterId] = reader
+		s.mu.Unlock()
+	}
 
 	kafkaMessage, err := reader.ReadMessage(ctx)
 	if err != nil {
@@ -46,12 +91,19 @@ func (s *chatService) ReceiveChannelMessage(ctx context.Context, channelId *uuid
 
 // ReceiveDirectMessage implements ChatService.
 func (s *chatService) ReceiveDirectMessage(ctx context.Context, targetCharacterId, receiverUserId string) (*chat.Message, error) {
+	if s.shuttingDown {
+		return nil, errors.New("service is shutting down")
+	}
+	s.wg.Add(1)
+	defer s.wg.Done()
+
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: s.kafkaBrokers,
 		GroupID: receiverUserId,
 		Topic:   getTopicForDirect(targetCharacterId),
 		Logger:  kafka.LoggerFunc(log.Logger.Tracef),
 	})
+	defer reader.Close()
 
 	kafkaMessage, err := reader.ReadMessage(ctx)
 	if err != nil {
@@ -63,6 +115,12 @@ func (s *chatService) ReceiveDirectMessage(ctx context.Context, targetCharacterI
 
 // SendChannelMessage implements ChatService.
 func (s *chatService) SendChannelMessage(ctx context.Context, channelId *uuid.UUID, msg *chat.Message) error {
+	if s.shuttingDown {
+		return errors.New("service is shutting down")
+	}
+	s.wg.Add(1)
+	defer s.wg.Done()
+
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  s.kafkaBrokers,
 		Topic:    getTopicForChannel(channelId),
@@ -70,12 +128,19 @@ func (s *chatService) SendChannelMessage(ctx context.Context, channelId *uuid.UU
 		Async:    true,
 		Logger:   kafka.LoggerFunc(log.Logger.Tracef),
 	})
+	defer writer.Close()
 
 	return writer.WriteMessages(ctx, *msg.ToKafkaMessage())
 }
 
 // SendDirectMessage implements ChatService.
 func (s *chatService) SendDirectMessage(ctx context.Context, targetCharacterId string, msg *chat.Message) error {
+	if s.shuttingDown {
+		return errors.New("service is shutting down")
+	}
+	s.wg.Add(1)
+	defer s.wg.Done()
+
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  s.kafkaBrokers,
 		Topic:    getTopicForDirect(targetCharacterId),
@@ -83,6 +148,7 @@ func (s *chatService) SendDirectMessage(ctx context.Context, targetCharacterId s
 		Async:    true,
 		Logger:   kafka.LoggerFunc(log.Logger.Tracef),
 	})
+	defer writer.Close()
 
 	return writer.WriteMessages(ctx, *msg.ToKafkaMessage())
 }

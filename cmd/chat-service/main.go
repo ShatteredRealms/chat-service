@@ -8,6 +8,9 @@ import (
 	"github.com/ShatteredRealms/chat-service/pkg/config"
 	"github.com/ShatteredRealms/chat-service/pkg/pb"
 	"github.com/ShatteredRealms/chat-service/pkg/srv"
+	"github.com/ShatteredRealms/go-common-service/pkg/bus"
+	"github.com/ShatteredRealms/go-common-service/pkg/bus/character/characterbus"
+	"github.com/ShatteredRealms/go-common-service/pkg/bus/gameserver/dimensionbus"
 	"github.com/ShatteredRealms/go-common-service/pkg/log"
 	commonpb "github.com/ShatteredRealms/go-common-service/pkg/pb"
 	commonsrv "github.com/ShatteredRealms/go-common-service/pkg/srv"
@@ -68,6 +71,23 @@ func main() {
 		return
 	}
 
+	// Bus service
+	busService, err := commonsrv.NewBusServiceServer(
+		ctx,
+		*srvCtx.Context,
+		map[bus.BusMessageType]bus.Resettable{
+			characterbus.Message{}.GetType(): srvCtx.CharacterService.GetResetter(),
+			dimensionbus.Message{}.GetType(): srvCtx.DimensionService.GetResetter(),
+		},
+		map[bus.BusMessageType]commonsrv.WriterResetCallback{},
+	)
+	commonpb.RegisterBusServiceServer(grpcServer, busService)
+	err = commonpb.RegisterBusServiceHandlerFromEndpoint(ctx, gwmux, cfg.Server.Address(), opts)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("register bus service handler endpoint: %v", err)
+		return
+	}
+
 	// Chat Service
 	chatService, err := srv.NewChatServiceServer(ctx, srvCtx)
 	if err != nil {
@@ -84,11 +104,7 @@ func main() {
 	// Setup Complete
 	log.Logger.WithContext(ctx).Info("Initializtion complete")
 	span.End()
-
-	srvErr := make(chan error, 1)
-	go func() {
-		srvErr <- util.StartServer(ctx, grpcServer, gwmux, cfg.Server.Address())
-	}()
+	srv, srvErr := util.StartServer(ctx, grpcServer, gwmux, cfg.Server.Address())
 
 	select {
 	case err := <-srvErr:
@@ -98,6 +114,7 @@ func main() {
 
 	case <-ctx.Done():
 		log.Logger.Info("Server canceled by user input.")
+		srv.Shutdown(ctx)
 		stop()
 	}
 

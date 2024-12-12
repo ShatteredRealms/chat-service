@@ -10,6 +10,7 @@ import (
 	"github.com/ShatteredRealms/go-common-service/pkg/bus"
 	"github.com/ShatteredRealms/go-common-service/pkg/bus/character/characterbus"
 	"github.com/ShatteredRealms/go-common-service/pkg/bus/gameserver/dimensionbus"
+	cconfig "github.com/ShatteredRealms/go-common-service/pkg/config"
 	commonrepo "github.com/ShatteredRealms/go-common-service/pkg/repository"
 	"github.com/ShatteredRealms/go-common-service/pkg/srv"
 	commonsrv "github.com/ShatteredRealms/go-common-service/pkg/srv"
@@ -33,19 +34,24 @@ func NewChatContext(ctx context.Context, cfg *config.ChatConfig, serviceName str
 	ctx, span := chatCtx.Tracer.Start(ctx, "context.chat.new")
 	defer span.End()
 
-	pg, err := commonrepo.ConnectDB(ctx, cfg.Postgres, cfg.Redis)
+	pg, err := commonrepo.ConnectDB(ctx, cconfig.DBPoolConfig{Master: cfg.Postgres}, cfg.Redis)
 	if err != nil {
 		return nil, fmt.Errorf("connect db: %w", err)
+	}
+
+	migrater, err := repository.NewPgxMigrater(ctx, cfg.Postgres.PostgresDSN(), cfg.PostgresMigrationPath)
+	if err != nil {
+		return nil, fmt.Errorf("migrater: %w", err)
 	}
 
 	chatCtx.ChatService = service.NewChatService(
 		cfg.Kafka.Addresses(),
 	)
 	chatCtx.ChatChannelService = service.NewChatChannelService(
-		repository.NewChatChannelPostgresRepository(pg),
+		repository.NewChatChannelPgxRepository(migrater),
 	)
 	chatCtx.ChatChannelPermissionService = service.NewChatChannelPermissionService(
-		repository.NewChatChannelPermissionPostgresRepository(pg),
+		repository.NewChatChannelPermissionPgxRepository(migrater),
 	)
 
 	chatCtx.DimensionService = dimensionbus.NewService(
