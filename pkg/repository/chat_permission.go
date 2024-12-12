@@ -12,5 +12,5 @@ type ChatChannelPermissionRepository interface {
 	SaveForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error
 	AddForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error
 	RemForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error
-	HasAccess(ctx context.Context, channelId *uuid.UUID, characterId string) (bool, error)
+	GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId string) (chat.ChannelPermissionLevel, error)
 }

@@ -103,29 +103,29 @@ var _ = Describe("ChatPermission", func() {
 		})
 	})
 
-	Describe("HasAccess", func() {
+	Describe("GetAccessLevel", func() {
 		It("should return false if the character ID is empty", func(ctx SpecContext) {
-			hasAccess, err := pgRepo.HasAccess(ctx, &channel.Id, "")
+			hasAccess, err := pgRepo.GetAccessLevel(ctx, &channel.Id, "")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(hasAccess).To(BeFalse())
+			Expect(hasAccess).To(Equal(chat.PermissionNone))
 		})
 		It("should return false if the channel ID is nil", func(ctx SpecContext) {
-			hasAccess, err := pgRepo.HasAccess(ctx, nil, characterId)
+			hasAccess, err := pgRepo.GetAccessLevel(ctx, nil, characterId)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(hasAccess).To(BeFalse())
+			Expect(hasAccess).To(Equal(chat.PermissionNone))
 		})
 		It("should return false if the character has no permissions", func(ctx SpecContext) {
-			hasAccess, err := pgRepo.HasAccess(ctx, &channel.Id, characterId)
+			hasAccess, err := pgRepo.GetAccessLevel(ctx, &channel.Id, characterId)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(hasAccess).To(BeFalse())
+			Expect(hasAccess).To(Equal(chat.PermissionNone))
 		})
 		It("should return true if the character has permissions", func(ctx SpecContext) {
 			err := pgRepo.AddForCharacter(ctx, characterId, []*uuid.UUID{&channel.Id})
 			Expect(err).NotTo(HaveOccurred())
 
-			hasAccess, err := pgRepo.HasAccess(ctx, &channel.Id, characterId)
+			hasAccess, err := pgRepo.GetAccessLevel(ctx, &channel.Id, characterId)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(hasAccess).To(BeTrue())
+			Expect(hasAccess).To(Equal(chat.PermissionReadSend))
 		})
 	})
 
@@ -141,15 +141,15 @@ var _ = Describe("ChatPermission", func() {
 		It("should overwrite permissions for a character", func(ctx SpecContext) {
 			err := pgRepo.SaveForCharacter(ctx, characterId, []*uuid.UUID{&channel.Id})
 			Expect(err).NotTo(HaveOccurred())
-			hasAccess, err := pgRepo.HasAccess(ctx, &channel.Id, characterId)
+			hasAccess, err := pgRepo.GetAccessLevel(ctx, &channel.Id, characterId)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(hasAccess).To(BeTrue())
+			Expect(hasAccess).To(Equal(chat.PermissionReadSend))
 
 			err = pgRepo.SaveForCharacter(ctx, characterId, []*uuid.UUID{})
 			Expect(err).NotTo(HaveOccurred())
-			hasAccess, err = pgRepo.HasAccess(ctx, &channel.Id, characterId)
+			hasAccess, err = pgRepo.GetAccessLevel(ctx, &channel.Id, characterId)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(hasAccess).To(BeFalse())
+			Expect(hasAccess).To(Equal(chat.PermissionNone))
 		})
 	})
 })

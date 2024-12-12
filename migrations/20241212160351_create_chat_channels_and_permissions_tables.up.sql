@@ -17,6 +17,7 @@ CREATE TABLE chat_channels (
 CREATE TABLE chat_channel_permissions (
   chat_channel_id uuid NOT NULL,
   character_id TEXT CHECK (character_id <> ''),
+  chat_banned_until TIMESTAMP,
   CONSTRAINT fk_chat_channel_id FOREIGN KEY (chat_channel_id) REFERENCES chat_channels(id),
   CONSTRAINT user_permission PRIMARY KEY (chat_channel_id, character_id)
 );

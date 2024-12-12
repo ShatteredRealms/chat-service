@@ -7,7 +7,6 @@ import (
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/ShatteredRealms/chat-service/pkg/pb"
-	"github.com/ShatteredRealms/go-common-service/pkg/auth"
 	"github.com/ShatteredRealms/go-common-service/pkg/bus/character/characterbus"
 	"github.com/ShatteredRealms/go-common-service/pkg/log"
 	commonpb "github.com/ShatteredRealms/go-common-service/pkg/pb"
@@ -86,12 +85,12 @@ func NewChatServiceServer(ctx context.Context, chatCtx *ChatContext) (pb.ChatSer
 
 // ConnectChatChannel implements pb.ChatServiceServer.
 func (s *chatServiceServer) ConnectChatChannel(request *pb.ConnectChatChannelRequest, server grpc.ServerStreamingServer[pb.ChatMessage]) error {
-	claims, id, err := s.validateChannelPermissions(server.Context(), request.ChannelId, request.CharacterId)
+	channelId, err := s.validateChannelPermissions(server.Context(), request.ChannelId, request.CharacterId, chat.PermissionRead)
 	if err != nil {
 		return err
 	}
 
-	chatMessages, err := s.Context.ChatService.ReceiveChannelMessages(server.Context(), id, claims.Subject)
+	chatMessages, err := s.Context.ChatService.ReceiveChannelMessages(server.Context(), channelId, request.CharacterId)
 
 	for {
 		select {
@@ -128,29 +127,28 @@ func (s *chatServiceServer) ConnectDirectMessages(request *commonpb.TargetId, se
 		return err
 	}
 
-	// Receive messages
-	for server.Context().Err() == nil {
-		msg, err := s.Context.ChatService.ReceiveDirectMessage(server.Context(), request.Id, claims.Subject)
-		if err != nil {
-			log.Logger.WithContext(server.Context()).
-				Errorf("receiving message for character '%s' by '%s': %v",
-					request.Id, claims.Subject, err)
-			return err
-		}
+	chatMessages, err := s.Context.ChatService.ReceiveDirectMessage(server.Context(), request.Id, request.Id)
 
-		err = server.Send(&pb.ChatMessage{
-			SenderCharacterId: msg.SenderCharacterId,
-			Content:           msg.Content,
-		})
-		if err != nil {
-			log.Logger.WithContext(server.Context()).
-				Errorf("sending grpc message for character '%s' by '%s': %v",
-					request.Id, claims.Subject, err)
-			return err
+	for {
+		select {
+		case <-server.Context().Done():
+			return nil
+		case msg, ok := <-chatMessages:
+			if !ok {
+				return fmt.Errorf("receiver shutdown")
+			}
+			err = server.Send(&pb.ChatMessage{
+				SenderCharacterId: msg.SenderCharacterId,
+				Content:           msg.Content,
+			})
+			if err != nil {
+				log.Logger.WithContext(server.Context()).
+					Errorf("sending grpc message for character '%s' by '%s': %v",
+						request.Id, claims.Subject, err)
+				return err
+			}
 		}
 	}
-
-	return nil
 }
 
 // CreateChatChannel implements pb.ChatServiceServer.
@@ -275,7 +273,7 @@ func (s *chatServiceServer) GetChatChannels(ctx context.Context, _ *emptypb.Empt
 
 // SendChatChannelMessage implements pb.ChatServiceServer.
 func (s *chatServiceServer) SendChatChannelMessage(ctx context.Context, request *pb.SendChatChannelMessageRequest) (*emptypb.Empty, error) {
-	_, id, err := s.validateChannelPermissions(ctx, request.ChannelId, request.ChatMessage.SenderCharacterId)
+	id, err := s.validateChannelPermissions(ctx, request.ChannelId, request.ChatMessage.SenderCharacterId, chat.PermissionReadSend)
 	if err != nil {
 		return nil, err
 	}
@@ -387,37 +385,38 @@ func (s *chatServiceServer) channelAuthRequestParse(ctx context.Context, charcte
 func (s *chatServiceServer) validateChannelPermissions(
 	ctx context.Context,
 	channelId, characterId string,
-) (*auth.SROClaims, *uuid.UUID, error) {
+	minLevel chat.ChannelPermissionLevel,
+) (*uuid.UUID, error) {
 	claims, err := s.validateRole(ctx, RoleChatChannelUse)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	channel, err := s.getChatChannel(ctx, channelId)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	err = s.validateCharacterOwner(ctx, characterId, claims.Subject)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Validate character has perssions to access channel
-	ok, err := s.Context.ChatChannelPermissionService.HasAccess(ctx, &channel.Id, characterId)
+	level, err := s.Context.ChatChannelPermissionService.GetAccessLevel(ctx, &channel.Id, characterId)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatPermissionGet, err)
-		return nil, nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
+		return nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
 	}
 
-	if !ok {
+	if level < minLevel {
 		log.Logger.WithContext(ctx).
 			Warnf("user '%s' and character '%s' tried accessing '%s' but has no permissions",
 				claims.Subject, characterId, channelId)
-		return nil, nil, srv.ErrPermissionDenied
+		return nil, srv.ErrPermissionDenied
 	}
 
-	return claims, &channel.Id, nil
+	return &channel.Id, nil
 }
 
 func (s *chatServiceServer) getChatChannel(ctx context.Context, channelId string) (*chat.Channel, error) {

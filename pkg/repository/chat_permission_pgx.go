@@ -103,16 +103,16 @@ func (r *ccpPgxRepo) GetForCharacter(ctx context.Context, characterId string) (*
 }
 
 // HasAccess implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) HasAccess(ctx context.Context, channelId *uuid.UUID, characterId string) (bool, error) {
+func (r *ccpPgxRepo) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId string) (chat.ChannelPermissionLevel, error) {
 	tx, err := r.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
 	if err != nil {
-		return false, err
+		return chat.PermissionNone, err
 	}
 
 	rows, err := tx.Query(
 		ctx,
-		`SELECT 1
+		`SELECT chat_banned_until
 		FROM chat_channels
 		JOIN chat_channel_permissions 
 			ON chat_channels.id = chat_channel_permissions.chat_channel_id
@@ -124,10 +124,19 @@ func (r *ccpPgxRepo) HasAccess(ctx context.Context, channelId *uuid.UUID, charac
 		characterId,
 	)
 	if err != nil {
-		return false, err
+		return chat.PermissionNone, err
 	}
 
-	return rows.Next(), nil
+	if rows.Next() {
+		perm := chat.ChannelPermission{}
+		err = rows.Scan(&perm.ChatBannedUntil)
+		if err != nil {
+			return chat.PermissionNone, err
+		}
+		return perm.Level(), nil
+	}
+
+	return chat.PermissionNone, nil
 }
 
 // SaveForCharacter implements ChatChannelPermissionRepository.
