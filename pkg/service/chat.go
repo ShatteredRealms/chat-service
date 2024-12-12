@@ -12,7 +12,7 @@ import (
 )
 
 type ChatService interface {
-	ReceiveChannelMessage(ctx context.Context, channelId *uuid.UUID, receiverCharacterId string) (*chat.Message, error)
+	ReceiveChannelMessages(ctx context.Context, channelId *uuid.UUID, receiverCharacterId string) (chan *chat.Message, error)
 	ReceiveDirectMessage(ctx context.Context, targetCharacterId, receiverCharacterId string) (*chat.Message, error)
 
 	SendChannelMessage(ctx context.Context, channelId *uuid.UUID, msg *chat.Message) error
@@ -34,7 +34,6 @@ type chatService struct {
 // Shutdown implements ChatService.
 func (s *chatService) Shutdown(ctx context.Context) error {
 	s.shuttingDown = true
-	s.wg.Wait()
 
 	var errs error
 	for _, readers := range s.openChannelReaders {
@@ -46,6 +45,7 @@ func (s *chatService) Shutdown(ctx context.Context) error {
 		}
 	}
 
+	s.wg.Wait()
 	s.shuttingDown = false
 	return errs
 }
@@ -57,36 +57,60 @@ func NewChatService(kafkaBrokers []string) ChatService {
 	}
 }
 
-// ReceiveChannelMessage implements ChatService.
-func (s *chatService) ReceiveChannelMessage(ctx context.Context, channelId *uuid.UUID, receiverCharacterId string) (*chat.Message, error) {
+// ReceiveChannelMessages implements ChatService.
+func (s *chatService) ReceiveChannelMessages(
+	ctx context.Context,
+	channelId *uuid.UUID,
+	receiverCharacterId string,
+) (chan *chat.Message, error) {
 	if s.shuttingDown {
 		return nil, errors.New("service is shutting down")
 	}
+
+	outChan := make(chan *chat.Message)
 	s.wg.Add(1)
-	defer s.wg.Done()
+	go func() {
+		defer close(outChan)
+		defer s.wg.Done()
 
-	reader, ok := s.openChannelReaders[*channelId][receiverCharacterId]
-	if !ok {
-		reader = kafka.NewReader(kafka.ReaderConfig{
-			Brokers: s.kafkaBrokers,
-			GroupID: receiverCharacterId,
-			Topic:   getTopicForChannel(channelId),
-			Logger:  kafka.LoggerFunc(log.Logger.Tracef),
-		})
-		s.mu.Lock()
-		if _, ok := s.openChannelReaders[*channelId]; !ok {
-			s.openChannelReaders[*channelId] = make(map[string]*kafka.Reader)
+		reader, ok := s.openChannelReaders[*channelId][receiverCharacterId]
+		if !ok {
+			reader = kafka.NewReader(kafka.ReaderConfig{
+				Brokers: s.kafkaBrokers,
+				GroupID: receiverCharacterId,
+				Topic:   getTopicForChannel(channelId),
+				Logger:  kafka.LoggerFunc(log.Logger.Tracef),
+			})
+			s.mu.Lock()
+			if _, ok := s.openChannelReaders[*channelId]; !ok {
+				s.openChannelReaders[*channelId] = make(map[string]*kafka.Reader)
+			}
+			s.openChannelReaders[*channelId][receiverCharacterId] = reader
+			s.mu.Unlock()
 		}
-		s.openChannelReaders[*channelId][receiverCharacterId] = reader
-		s.mu.Unlock()
-	}
 
-	kafkaMessage, err := reader.ReadMessage(ctx)
-	if err != nil {
-		return nil, err
-	}
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				kafkaMessage, err := reader.ReadMessage(ctx)
+				if err != nil {
+					log.Logger.Errorf(
+						"error reading message from kafka for channel %s and character %s: %v",
+						channelId.String(),
+						receiverCharacterId,
+						err,
+					)
+					return
+				}
 
-	return chat.MessageFromKafkaMessage(&kafkaMessage), nil
+				outChan <- chat.MessageFromKafkaMessage(&kafkaMessage)
+			}
+		}
+	}()
+
+	return outChan, nil
 }
 
 // ReceiveDirectMessage implements ChatService.

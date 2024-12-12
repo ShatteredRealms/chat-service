@@ -3,6 +3,7 @@ package srv
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/ShatteredRealms/chat-service/pkg/pb"
@@ -90,29 +91,28 @@ func (s *chatServiceServer) ConnectChatChannel(request *pb.ConnectChatChannelReq
 		return err
 	}
 
-	// Receive messages
-	for server.Context().Err() == nil {
-		msg, err := s.Context.ChatService.ReceiveChannelMessage(server.Context(), id, claims.Subject)
-		if err != nil {
-			log.Logger.WithContext(server.Context()).
-				Errorf("receiving channel message for channel '%s' for character '%s': %v",
-					request.ChannelId, request.CharacterId, err)
-			return err
-		}
+	chatMessages, err := s.Context.ChatService.ReceiveChannelMessages(server.Context(), id, claims.Subject)
 
-		err = server.Send(&pb.ChatMessage{
-			SenderCharacterId: msg.SenderCharacterId,
-			Content:           msg.Content,
-		})
-		if err != nil {
-			log.Logger.WithContext(server.Context()).
-				Errorf("error sending chat message on channel '%s' for character '%s': %v",
-					request.ChannelId, request.CharacterId, err)
-			return err
+	for {
+		select {
+		case <-server.Context().Done():
+			return nil
+		case msg, ok := <-chatMessages:
+			if !ok {
+				return fmt.Errorf("receiver shutdown")
+			}
+			err = server.Send(&pb.ChatMessage{
+				SenderCharacterId: msg.SenderCharacterId,
+				Content:           msg.Content,
+			})
+			if err != nil {
+				log.Logger.WithContext(server.Context()).
+					Errorf("error sending chat message on channel '%s' for character '%s': %v",
+						request.ChannelId, request.CharacterId, err)
+				return err
+			}
 		}
 	}
-
-	return nil
 }
 
 // ConnectDirectMessages implements pb.ChatServiceServer.
