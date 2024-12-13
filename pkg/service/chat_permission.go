@@ -6,6 +6,7 @@ import (
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/ShatteredRealms/chat-service/pkg/repository"
+	"github.com/ShatteredRealms/go-common-service/pkg/common"
 	"github.com/google/uuid"
 )
 
@@ -34,37 +35,61 @@ func (c *ccpService) GetAccessLevel(
 	channelId *uuid.UUID,
 	characterId string,
 ) (chat.ChannelPermissionLevel, error) {
-	return c.repo.GetAccessLevel(ctx, channelId, characterId)
+	id, err := uuid.Parse(characterId)
+	if err != nil {
+		return chat.PermissionNone, common.ErrInvalidId
+	}
+	return c.repo.GetAccessLevel(ctx, channelId, &id)
 }
 
 // GetForCharacter implements ChatChannelPermissionService.
 func (c *ccpService) GetForCharacter(ctx context.Context, characterId string) (*chat.Channels, error) {
-	return c.repo.GetForCharacter(ctx, characterId)
+	id, err := uuid.Parse(characterId)
+	if err != nil {
+		return nil, common.ErrInvalidId
+	}
+	return c.repo.GetForCharacter(ctx, &id)
 }
 
 // SaveForCharacter implements ChatChannelPermissionService.
 func (c *ccpService) SaveForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
-	return c.repo.SaveForCharacter(ctx, characterId, channelIds)
+	id, err := uuid.Parse(characterId)
+	if err != nil {
+		return common.ErrInvalidId
+	}
+	return c.repo.SaveForCharacter(ctx, &id, channelIds)
 }
 
 // AddForCharacter implements ChatChannelPermissionService.
 func (c *ccpService) AddForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
-	return c.repo.AddForCharacter(ctx, characterId, channelIds)
+	id, err := uuid.Parse(characterId)
+	if err != nil {
+		return common.ErrInvalidId
+	}
+	return c.repo.AddForCharacter(ctx, &id, channelIds)
 }
 
 // RemForCharacter implements ChatChannelPermissionService.
 func (c *ccpService) RemForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
-	return c.repo.RemForCharacter(ctx, characterId, channelIds)
+	id, err := uuid.Parse(characterId)
+	if err != nil {
+		return common.ErrInvalidId
+	}
+	return c.repo.RemForCharacter(ctx, &id, channelIds)
 }
 
 // BanCharacter implements ChatChannelPermissionService.
 func (c *ccpService) BanCharacter(ctx context.Context, characterId string, channelId *uuid.UUID, durationSec int64) error {
+	id, err := uuid.Parse(characterId)
+	if err != nil {
+		return common.ErrInvalidId
+	}
 	if durationSec == -1 {
-		return c.repo.BanCharacter(ctx, characterId, channelId, nil)
+		return c.repo.BanCharacter(ctx, &id, channelId, nil)
 	}
 
 	if durationSec == 0 {
-		return c.repo.BanCharacter(ctx, characterId, channelId, &time.Time{})
+		return c.repo.BanCharacter(ctx, &id, channelId, &time.Time{})
 	}
 
 	if durationSec < 0 {
@@ -72,5 +97,5 @@ func (c *ccpService) BanCharacter(ctx context.Context, characterId string, chann
 	}
 
 	time := time.Now().UTC().Add(time.Duration(durationSec) * time.Second)
-	return c.repo.BanCharacter(ctx, characterId, channelId, &time)
+	return c.repo.BanCharacter(ctx, &id, channelId, &time)
 }

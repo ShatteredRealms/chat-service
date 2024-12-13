@@ -14,8 +14,13 @@ import (
 
 var _ = Describe("ChatChannel Repository", func() {
 	var pgRepo repository.ChatChannelRepository
+	var id uuid.UUID
 	BeforeEach(func(ctx SpecContext) {
+		var err error
+
 		pgRepo = repository.NewChatChannelPgxRepository(migrater)
+		id, err = uuid.NewV7()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("Create", func() {
@@ -25,7 +30,7 @@ var _ = Describe("ChatChannel Repository", func() {
 			})
 			It("should return an error if the channel name is empty", func(ctx SpecContext) {
 				createdChannel, outErr := pgRepo.Create(ctx, &chat.Channel{
-					DimensionId: faker.UUIDHyphenated(),
+					DimensionId: &id,
 				})
 				Expect(outErr).To(HaveOccurred())
 				Expect(createdChannel).To(BeNil())
@@ -38,7 +43,7 @@ var _ = Describe("ChatChannel Repository", func() {
 			BeforeEach(func(ctx SpecContext) {
 				channel = &chat.Channel{
 					Name:        faker.Username(),
-					DimensionId: faker.UUIDHyphenated(),
+					DimensionId: &id,
 				}
 			})
 			It("should create a new chat channel", func(ctx SpecContext) {
@@ -50,11 +55,6 @@ var _ = Describe("ChatChannel Repository", func() {
 				createdChannel2, err := pgRepo.Create(ctx, channel)
 				Expect(err).To(HaveOccurred())
 				Expect(createdChannel2).To(BeNil())
-			})
-
-			It("should create a new chat channel even with an empty dimension ID", func(ctx SpecContext) {
-				channel.DimensionId = ""
-				createdChannel, outErr = pgRepo.Create(ctx, channel)
 			})
 
 			It("should create a new chat channel if name and dimension combo existed but was deleted", func(ctx SpecContext) {
@@ -83,7 +83,7 @@ var _ = Describe("ChatChannel Repository", func() {
 			var err error
 			channel, err = pgRepo.Create(ctx, &chat.Channel{
 				Name:        faker.Username(),
-				DimensionId: faker.UUIDHyphenated(),
+				DimensionId: &id,
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -116,9 +116,11 @@ var _ = Describe("ChatChannel Repository", func() {
 		It("should return all channels", func(ctx SpecContext) {
 			count := rand.Intn(10) + 5
 			for i := 0; i < count; i++ {
+				id, err := uuid.NewV7()
+				Expect(err).NotTo(HaveOccurred())
 				channel, err := pgRepo.Create(ctx, &chat.Channel{
 					Name:        faker.Username(),
-					DimensionId: faker.UUIDHyphenated(),
+					DimensionId: &id,
 				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(channel).NotTo(BeNil())
@@ -148,7 +150,7 @@ var _ = Describe("ChatChannel Repository", func() {
 			var err error
 			channel, err = pgRepo.Create(ctx, &chat.Channel{
 				Name:        faker.Username(),
-				DimensionId: faker.UUIDHyphenated(),
+				DimensionId: &id,
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -178,7 +180,7 @@ var _ = Describe("ChatChannel Repository", func() {
 			var err error
 			channel, err = pgRepo.Create(ctx, &chat.Channel{
 				Name:        faker.Username(),
-				DimensionId: faker.UUIDHyphenated(),
+				DimensionId: &id,
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -190,8 +192,11 @@ var _ = Describe("ChatChannel Repository", func() {
 			Expect(err).To(Equal(repository.ErrDoesNotExist))
 		})
 		It("should update the channel", func(ctx SpecContext) {
+			newId, err := uuid.NewV7()
+			Expect(err).NotTo(HaveOccurred())
+
 			channel.Name = faker.Username()
-			channel.DimensionId = faker.UUIDHyphenated()
+			channel.DimensionId = &newId
 			updatedChannel, err := pgRepo.Save(ctx, channel)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(updatedChannel).NotTo(BeNil())

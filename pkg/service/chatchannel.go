@@ -53,11 +53,16 @@ func NewChatChannelService(repo repository.ChatChannelRepository) ChatChannelSer
 
 // Create implements ChatChannelService.
 func (c *chatChannelService) Create(ctx context.Context, name string, dimensionId string) (*chat.Channel, error) {
+	id, err := uuid.Parse(dimensionId)
+	if err != nil {
+		return nil, err
+	}
+
 	channel := &chat.Channel{
 		Name:        name,
-		DimensionId: dimensionId,
+		DimensionId: &id,
 	}
-	err := channel.Validate()
+	err = channel.Validate()
 	if err != nil {
 		return nil, err
 	}

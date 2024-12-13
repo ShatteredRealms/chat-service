@@ -6,6 +6,7 @@ type Message struct {
 	SenderCharacterId string `json:"senderCharacterId"`
 	Content           string `json:"content"`
 }
+type Messages []*Message
 
 func (m *Message) ToKafkaMessage() *kafka.Message {
 	return &kafka.Message{

@@ -13,26 +13,26 @@ import (
 var _ = Describe("ChatPermission", func() {
 	var pgRepo repository.ChatChannelPermissionRepository
 	var channel *chat.Channel
-	var characterId string
+	var characterId *uuid.UUID
 	BeforeEach(func(ctx SpecContext) {
 		pgRepo = repository.NewChatChannelPermissionPgxRepository(migrater)
 
 		ccRepo := repository.NewChatChannelPgxRepository(migrater)
 
 		var err error
+		id, err := uuid.NewV7()
+		Expect(err).NotTo(HaveOccurred())
 		channel, err = ccRepo.Create(ctx, &chat.Channel{
 			Name:        faker.Username(),
-			DimensionId: faker.UUIDHyphenated(),
+			DimensionId: &id,
 		})
 		Expect(err).NotTo(HaveOccurred())
-		characterId = faker.UUIDHyphenated()
+		id, err = uuid.NewV7()
+		Expect(err).NotTo(HaveOccurred())
+		characterId = &id
 	})
 
 	Describe("AddForCharacter", func() {
-		It("should error if the character ID is empty", func(ctx SpecContext) {
-			err := pgRepo.AddForCharacter(ctx, "", []*uuid.UUID{&channel.Id})
-			Expect(err).To(HaveOccurred())
-		})
 		It("should error if the channel ID is nil", func(ctx SpecContext) {
 			err := pgRepo.AddForCharacter(ctx, characterId, []*uuid.UUID{nil})
 			Expect(err).To(HaveOccurred())
@@ -55,10 +55,6 @@ var _ = Describe("ChatPermission", func() {
 
 	Describe("RemForCharacter", func() {
 		Context("no channel permissions removed", func() {
-			It("should not error if the character ID is empty", func(ctx SpecContext) {
-				err := pgRepo.RemForCharacter(ctx, "", []*uuid.UUID{&channel.Id})
-				Expect(err).NotTo(HaveOccurred())
-			})
 			It("should not return an error if channel ID is nil", func(ctx SpecContext) {
 				err := pgRepo.RemForCharacter(ctx, characterId, []*uuid.UUID{nil})
 				Expect(err).NotTo(HaveOccurred())
@@ -80,12 +76,6 @@ var _ = Describe("ChatPermission", func() {
 	})
 
 	Describe("GetForCharacter", func() {
-		It("should return nothing if the character ID is empty", func(ctx SpecContext) {
-			channels, err := pgRepo.GetForCharacter(ctx, "")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(channels).NotTo(BeNil())
-			Expect(len(*channels)).To(Equal(0))
-		})
 		It("should get permissions for a character with some", func(ctx SpecContext) {
 			err := pgRepo.AddForCharacter(ctx, characterId, []*uuid.UUID{&channel.Id})
 			Expect(err).NotTo(HaveOccurred())
@@ -105,7 +95,7 @@ var _ = Describe("ChatPermission", func() {
 
 	Describe("GetAccessLevel", func() {
 		It("should return false if the character ID is empty", func(ctx SpecContext) {
-			hasAccess, err := pgRepo.GetAccessLevel(ctx, &channel.Id, "")
+			hasAccess, err := pgRepo.GetAccessLevel(ctx, &channel.Id, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(hasAccess).To(Equal(chat.PermissionNone))
 		})
@@ -130,10 +120,6 @@ var _ = Describe("ChatPermission", func() {
 	})
 
 	Describe("SaveForCharacter", func() {
-		It("should return an error if the character ID is empty", func(ctx SpecContext) {
-			err := pgRepo.SaveForCharacter(ctx, "", []*uuid.UUID{&channel.Id})
-			Expect(err).To(HaveOccurred())
-		})
 		It("should return an error if the channel ID is nil", func(ctx SpecContext) {
 			err := pgRepo.SaveForCharacter(ctx, characterId, []*uuid.UUID{nil})
 			Expect(err).To(HaveOccurred())

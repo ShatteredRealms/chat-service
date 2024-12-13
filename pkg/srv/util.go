@@ -37,37 +37,37 @@ func (s *chatServiceServer) validateChannelPermissions(
 	ctx context.Context,
 	channelId, characterId string,
 	minLevel chat.ChannelPermissionLevel,
-) (*uuid.UUID, error) {
+) (*chat.Channel, *characterbus.Character, error) {
 	claims, err := s.validateRole(ctx, RoleChatChannelUse)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	channel, err := s.getChatChannel(ctx, channelId)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	err = s.validateCharacterOwner(ctx, characterId, claims.Subject)
+	character, err := s.validateCharacterOwner(ctx, characterId, claims.Subject)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Validate character has perssions to access channel
 	level, err := s.Context.ChatChannelPermissionService.GetAccessLevel(ctx, &channel.Id, characterId)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatPermissionGet, err)
-		return nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
+		return nil, nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
 	}
 
 	if level < minLevel {
 		log.Logger.WithContext(ctx).
 			Warnf("user '%s' and character '%s' tried accessing '%s' but has no permissions",
 				claims.Subject, characterId, channelId)
-		return nil, srv.ErrPermissionDenied
+		return nil, nil, srv.ErrPermissionDenied
 	}
 
-	return &channel.Id, nil
+	return channel, character, nil
 }
 
 func (s *chatServiceServer) getChatChannel(ctx context.Context, channelId string) (*chat.Channel, error) {
@@ -95,19 +95,25 @@ func (s *chatServiceServer) getCharacter(ctx context.Context, characterId string
 	return character, nil
 }
 
-func (s *chatServiceServer) validateCharacterOwner(ctx context.Context, characterId string, ownerId string) error {
+func (s *chatServiceServer) validateCharacterOwner(ctx context.Context, characterId string, ownerId string) (*characterbus.Character, error) {
 	// Validate sender owns character
 	character, err := s.getCharacter(ctx, characterId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if character.OwnerId != ownerId {
+	oId, err := uuid.Parse(ownerId)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("unable to process request: %v", err)
+		return nil, status.Error(codes.Internal, "unable to process request")
+	}
+
+	if character.OwnerId != oId {
 		log.Logger.WithContext(ctx).
 			Warnf("user '%s' tried chat acesss for character '%s' with owner '%s'",
 				ownerId, character.Id, character.OwnerId)
-		return srv.ErrPermissionDenied
+		return nil, srv.ErrPermissionDenied
 	}
 
-	return nil
+	return character, nil
 }

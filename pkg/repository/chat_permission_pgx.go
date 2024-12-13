@@ -21,7 +21,7 @@ func NewChatChannelPermissionPgxRepository(migrater *PgxMigrater) ChatChannelPer
 }
 
 // AddForCharacter implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) AddForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
+func (r *ccpPgxRepo) AddForCharacter(ctx context.Context, characterId *uuid.UUID, channelIds []*uuid.UUID) error {
 	tagCharacter(ctx, characterId)
 	tx, err := r.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
@@ -37,7 +37,7 @@ func (r *ccpPgxRepo) AddForCharacter(ctx context.Context, characterId string, ch
 }
 
 // RemForCharacter implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) RemForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
+func (r *ccpPgxRepo) RemForCharacter(ctx context.Context, characterId *uuid.UUID, channelIds []*uuid.UUID) error {
 	tagCharacter(ctx, characterId)
 	tx, err := r.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
@@ -54,7 +54,7 @@ func (r *ccpPgxRepo) RemForCharacter(ctx context.Context, characterId string, ch
 }
 
 // GetForCharacter implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) GetForCharacter(ctx context.Context, characterId string) (*chat.Channels, error) {
+func (r *ccpPgxRepo) GetForCharacter(ctx context.Context, characterId *uuid.UUID) (*chat.Channels, error) {
 	tagCharacter(ctx, characterId)
 	channels := make(chat.Channels, 0)
 
@@ -104,7 +104,7 @@ func (r *ccpPgxRepo) GetForCharacter(ctx context.Context, characterId string) (*
 }
 
 // HasAccess implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId string) (chat.ChannelPermissionLevel, error) {
+func (r *ccpPgxRepo) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId *uuid.UUID) (chat.ChannelPermissionLevel, error) {
 	tx, err := r.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
 	if err != nil {
@@ -141,7 +141,7 @@ func (r *ccpPgxRepo) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, c
 }
 
 // SaveForCharacter implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) SaveForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
+func (r *ccpPgxRepo) SaveForCharacter(ctx context.Context, characterId *uuid.UUID, channelIds []*uuid.UUID) error {
 	tagCharacter(ctx, characterId)
 	tx, err := r.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
@@ -162,7 +162,7 @@ func (r *ccpPgxRepo) SaveForCharacter(ctx context.Context, characterId string, c
 }
 
 // BanCharacter implements ChatChannelPermissionRepository.
-func (r *ccpPgxRepo) BanCharacter(ctx context.Context, characterId string, channelId *uuid.UUID, until *time.Time) error {
+func (r *ccpPgxRepo) BanCharacter(ctx context.Context, characterId *uuid.UUID, channelId *uuid.UUID, until *time.Time) error {
 	tagCharacter(ctx, characterId)
 	tx, err := r.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
@@ -184,7 +184,7 @@ func (r *ccpPgxRepo) BanCharacter(ctx context.Context, characterId string, chann
 	return tx.Commit(ctx)
 }
 
-func (r *ccpPgxRepo) addPermissionsForUser(ctx context.Context, tx pgx.Tx, channelIds []*uuid.UUID, characterId string) error {
+func (r *ccpPgxRepo) addPermissionsForUser(ctx context.Context, tx pgx.Tx, channelIds []*uuid.UUID, characterId *uuid.UUID) error {
 	for _, channelId := range channelIds {
 		_, err := tx.Exec(ctx, "INSERT INTO chat_channel_permissions (chat_channel_id, character_id) VALUES ($1, $2)", channelId, characterId)
 		if err != nil {

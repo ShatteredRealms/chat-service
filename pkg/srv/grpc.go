@@ -89,12 +89,16 @@ func NewChatServiceServer(ctx context.Context, chatCtx *ChatContext) (pb.ChatSer
 
 // ConnectChatChannel implements pb.ChatServiceServer.
 func (s *chatServiceServer) ConnectChatChannel(request *pb.ConnectChatChannelRequest, server grpc.ServerStreamingServer[pb.ChatMessage]) error {
-	channelId, err := s.validateChannelPermissions(server.Context(), request.ChannelId, request.CharacterId, chat.PermissionRead)
+	channel, character, err := s.validateChannelPermissions(server.Context(), request.ChannelId, request.CharacterId, chat.PermissionRead)
 	if err != nil {
 		return err
 	}
 
-	chatMessages, err := s.Context.ChatService.ReceiveChannelMessages(server.Context(), channelId, request.CharacterId)
+	dimensionId := channel.DimensionId
+	if dimensionId == nil {
+		dimensionId = &character.DimensionId
+	}
+	chatMessages, err := s.Context.ChatService.ReceiveChannelMessages(server.Context(), &channel.Id, dimensionId, &character.Id)
 
 	for {
 		select {
@@ -126,12 +130,12 @@ func (s *chatServiceServer) ConnectDirectMessages(request *commonpb.TargetId, se
 		return err
 	}
 
-	err = s.validateCharacterOwner(server.Context(), request.Id, claims.Subject)
+	character, err := s.validateCharacterOwner(server.Context(), request.Id, claims.Subject)
 	if err != nil {
 		return err
 	}
 
-	chatMessages, err := s.Context.ChatService.ReceiveDirectMessage(server.Context(), request.Id, request.Id)
+	chatMessages, err := s.Context.ChatService.ReceiveDirectMessages(server.Context(), &character.Id, &character.Id)
 
 	for {
 		select {
@@ -223,7 +227,12 @@ func (s *chatServiceServer) GetAuthorizedChatChannels(ctx context.Context, reque
 	if err != nil {
 		return nil, err
 	}
-	if character.OwnerId != claim.Subject &&
+
+	subjectId, err := uuid.Parse(claim.Subject)
+	if err != nil {
+		return nil, errors.New("invalid owner id")
+	}
+	if character.OwnerId != subjectId &&
 		!claim.HasResourceRole(RoleChatPermissionsManagement, s.Context.Config.Keycloak.ClientId) {
 		log.Logger.WithContext(ctx).Warnf("user '%s' tried accessing chat channels for character '%s' with owner '%s'",
 			claim.Subject, character.Id, character.OwnerId)
@@ -278,12 +287,16 @@ func (s *chatServiceServer) GetChatChannels(ctx context.Context, _ *emptypb.Empt
 
 // SendChatChannelMessage implements pb.ChatServiceServer.
 func (s *chatServiceServer) SendChatChannelMessage(ctx context.Context, request *pb.SendChatChannelMessageRequest) (*emptypb.Empty, error) {
-	id, err := s.validateChannelPermissions(ctx, request.ChannelId, request.ChatMessage.SenderCharacterId, chat.PermissionReadSend)
+	channel, character, err := s.validateChannelPermissions(ctx, request.ChannelId, request.ChatMessage.SenderCharacterId, chat.PermissionReadSend)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.Context.ChatService.SendChannelMessage(ctx, id, &chat.Message{
+	dimensionId := channel.DimensionId
+	if dimensionId == nil {
+		dimensionId = &character.DimensionId
+	}
+	err = s.Context.ChatService.SendChannelMessage(ctx, &channel.Id, dimensionId, &chat.Message{
 		SenderCharacterId: request.ChatMessage.SenderCharacterId,
 		Content:           request.ChatMessage.Content,
 	})
@@ -306,12 +319,21 @@ func (s *chatServiceServer) SendDirectMessage(
 		return nil, err
 	}
 
-	err = s.validateCharacterOwner(ctx, request.ChatMessage.SenderCharacterId, claims.Subject)
+	senderCharacter, err := s.validateCharacterOwner(ctx, request.ChatMessage.SenderCharacterId, claims.Subject)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.Context.ChatService.SendDirectMessage(ctx, request.CharacterId, &chat.Message{
+	targetCharacter, err := s.getCharacter(ctx, request.CharacterId)
+	if err != nil {
+		return nil, err
+	}
+
+	if targetCharacter.DimensionId != senderCharacter.DimensionId {
+		return nil, status.Errorf(codes.NotFound, "character not found")
+	}
+
+	err = s.Context.ChatService.SendDirectMessage(ctx, &targetCharacter.Id, &chat.Message{
 		SenderCharacterId: request.ChatMessage.SenderCharacterId,
 		Content:           request.ChatMessage.Content,
 	})
