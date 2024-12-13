@@ -312,10 +312,13 @@ func (s *chatServiceServer) SendChatChannelMessage(ctx context.Context, request 
 		return nil, status.Errorf(codes.Internal, ErrChatSend.Error())
 	}
 
-	err = s.Context.ChatLogService.AddMessage(ctx, &channel.Id, dimensionId, msg)
-	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("error saving message to chat log: %v", err)
-	}
+	go func() {
+		newCtx := context.WithoutCancel(ctx)
+		err = s.Context.ChatLogService.AddMessage(newCtx, &channel.Id, dimensionId, msg)
+		if err != nil {
+			log.Logger.WithContext(ctx).Errorf("error saving message to chat log: %v", err)
+		}
+	}()
 
 	return &emptypb.Empty{}, nil
 }
@@ -356,10 +359,13 @@ func (s *chatServiceServer) SendDirectMessage(
 		return nil, status.Errorf(codes.Internal, ErrChatSend.Error())
 	}
 
-	err = s.Context.ChatLogService.AddMessage(ctx, &targetCharacter.Id, &targetCharacter.DimensionId, msg)
-	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("error saving message to chat log: %v", err)
-	}
+	go func() {
+		newCtx := context.WithoutCancel(ctx)
+		err = s.Context.ChatLogService.AddMessage(newCtx, &targetCharacter.Id, &targetCharacter.DimensionId, msg)
+		if err != nil {
+			log.Logger.WithContext(ctx).Errorf("error saving message to chat log: %v", err)
+		}
+	}()
 
 	return &emptypb.Empty{}, nil
 }

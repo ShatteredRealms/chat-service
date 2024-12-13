@@ -88,7 +88,7 @@ func (s *chatService) ReceiveChannelMessages(
 	go func() {
 		defer s.wg.Done()
 
-		reader, cleanup := s.getReader(channelId, receiverCharacterId, getTopicForChannel(channelId, dimensionId))
+		reader, cleanup := s.getReader(channelId, receiverCharacterId, s.getTopicForChannel(channelId, dimensionId))
 		defer cleanup()
 
 		s.messageLoop(ctx, channelId, receiverCharacterId, reader, outChan)
@@ -108,7 +108,7 @@ func (s *chatService) ReceiveDirectMessages(ctx context.Context, targetCharacter
 	go func() {
 		defer s.wg.Done()
 
-		reader, cleanup := s.getReader(targetCharacterId, receiverUserId, getTopicForDirect(targetCharacterId))
+		reader, cleanup := s.getReader(targetCharacterId, receiverUserId, s.getTopicForDirect(targetCharacterId))
 		defer cleanup()
 
 		s.messageLoop(ctx, targetCharacterId, receiverUserId, reader, outChan)
@@ -164,7 +164,7 @@ func (s *chatService) SendChannelMessage(
 
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  s.kafkaBrokers,
-		Topic:    getTopicForChannel(channelId, dimensionId),
+		Topic:    s.getTopicForChannel(channelId, dimensionId),
 		Balancer: &kafka.LeastBytes{},
 		Async:    true,
 		Logger:   kafka.LoggerFunc(log.Logger.Tracef),
@@ -184,7 +184,7 @@ func (s *chatService) SendDirectMessage(ctx context.Context, targetCharacterId *
 
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  s.kafkaBrokers,
-		Topic:    getTopicForDirect(targetCharacterId),
+		Topic:    s.getTopicForDirect(targetCharacterId),
 		Balancer: &kafka.LeastBytes{},
 		Async:    true,
 		Logger:   kafka.LoggerFunc(log.Logger.Tracef),
@@ -217,10 +217,59 @@ func (s *chatService) getReader(channelId, receiverId *uuid.UUID, topic string) 
 	return reader, cleanup
 }
 
-func getTopicForChannel(channelId *uuid.UUID, dimensionId *uuid.UUID) string {
-	return fmt.Sprintf("chat.channel.%s.%s", channelId.String(), dimensionId.String())
+func (s *chatService) getTopicForChannel(channelId *uuid.UUID, dimensionId *uuid.UUID) (topic string) {
+	topic = fmt.Sprintf("chat.channel.%s.%s", channelId.String(), dimensionId.String())
+	s.configureChatTopic(topic)
+	return
 }
 
-func getTopicForDirect(characterId *uuid.UUID) string {
-	return fmt.Sprintf("chat.direct.%s", characterId.String())
+func (s *chatService) getTopicForDirect(characterId *uuid.UUID) (topic string) {
+	topic = fmt.Sprintf("chat.direct.%s", characterId.String())
+	s.configureChatTopic(topic)
+	return topic
+}
+
+func (s *chatService) configureChatTopic(name string) {
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		client := kafka.Client{
+			Addr: kafka.TCP(s.kafkaBrokers[0]),
+		}
+		resp, err := client.AlterConfigs(context.Background(), &kafka.AlterConfigsRequest{
+			Resources: []kafka.AlterConfigRequestResource{
+				{
+					ResourceType: kafka.ResourceTypeTopic,
+					ResourceName: name,
+					Configs: []kafka.AlterConfigRequestConfig{
+						{
+							Name:  "retention.ms",
+							Value: "2000",
+						},
+						{
+							Name:  "delete.retention.ms",
+							Value: "1000",
+						},
+						{
+							Name:  "segment.ms",
+							Value: "4000",
+						},
+					},
+				},
+			},
+			ValidateOnly: false,
+		})
+
+		if err != nil {
+			log.Logger.Errorf("error updating topic %s: %v", name, err)
+			return
+		}
+
+		for resource, err := range resp.Errors {
+
+			if err != nil {
+				log.Logger.Errorf("error updating topic %s: %s", resource.Name, err.Error())
+			}
+		}
+	}()
 }

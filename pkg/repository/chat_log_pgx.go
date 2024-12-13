@@ -86,12 +86,12 @@ func (c *chatLogPgxRepository) GetMessages(
 	whereBuilder.WriteString("WHERE (channel_id = $1")
 	if after != nil {
 		args = append(args, *after)
-		whereBuilder.WriteString(" AND created_at > $")
+		whereBuilder.WriteString(" AND sent_at >= $")
 		whereBuilder.WriteString(getParamIndex())
 	}
 	if before != nil {
 		args = append(args, *before)
-		whereBuilder.WriteString(" AND created_at < $")
+		whereBuilder.WriteString(" AND sent_at <= $")
 		whereBuilder.WriteString(getParamIndex())
 	}
 	if sender != nil {
