@@ -80,7 +80,6 @@ report-watch:
 
 dev-watch: test-watch report-watch
 
-
 mocks: $(MOCK_INTERFACES)
 $(MOCK_INTERFACES):
 	mockgen \

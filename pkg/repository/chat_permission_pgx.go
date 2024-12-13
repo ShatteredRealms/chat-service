@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/google/uuid"
@@ -153,6 +154,29 @@ func (r *ccpPgxRepo) SaveForCharacter(ctx context.Context, characterId string, c
 	}
 
 	err = r.addPermissionsForUser(ctx, tx, channelIds, characterId)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+// BanCharacter implements ChatChannelPermissionRepository.
+func (r *ccpPgxRepo) BanCharacter(ctx context.Context, characterId string, channelId *uuid.UUID, until *time.Time) error {
+	tagCharacter(ctx, characterId)
+	tx, err := r.conn.Begin(ctx)
+	defer tx.Rollback(ctx)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(
+		ctx,
+		"UPDATE chat_channel_permissions SET chat_banned_until = $1 WHERE character_id = $2 AND chat_channel_id = $3",
+		until,
+		characterId,
+		channelId,
+	)
 	if err != nil {
 		return err
 	}

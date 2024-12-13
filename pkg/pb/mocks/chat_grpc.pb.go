@@ -44,6 +44,26 @@ func (m *MockChatServiceClient) EXPECT() *MockChatServiceClientMockRecorder {
 	return m.recorder
 }
 
+// BanCharacterFromChatChannel mocks base method.
+func (m *MockChatServiceClient) BanCharacterFromChatChannel(ctx context.Context, in *pb.BanRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BanCharacterFromChatChannel", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BanCharacterFromChatChannel indicates an expected call of BanCharacterFromChatChannel.
+func (mr *MockChatServiceClientMockRecorder) BanCharacterFromChatChannel(ctx, in any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BanCharacterFromChatChannel", reflect.TypeOf((*MockChatServiceClient)(nil).BanCharacterFromChatChannel), varargs...)
+}
+
 // ConnectChatChannel mocks base method.
 func (m *MockChatServiceClient) ConnectChatChannel(ctx context.Context, in *pb.ConnectChatChannelRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[pb.ChatMessage], error) {
 	m.ctrl.T.Helper()
@@ -306,6 +326,21 @@ func NewMockChatServiceServer(ctrl *gomock.Controller) *MockChatServiceServer {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockChatServiceServer) EXPECT() *MockChatServiceServerMockRecorder {
 	return m.recorder
+}
+
+// BanCharacterFromChatChannel mocks base method.
+func (m *MockChatServiceServer) BanCharacterFromChatChannel(arg0 context.Context, arg1 *pb.BanRequest) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BanCharacterFromChatChannel", arg0, arg1)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BanCharacterFromChatChannel indicates an expected call of BanCharacterFromChatChannel.
+func (mr *MockChatServiceServerMockRecorder) BanCharacterFromChatChannel(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BanCharacterFromChatChannel", reflect.TypeOf((*MockChatServiceServer)(nil).BanCharacterFromChatChannel), arg0, arg1)
 }
 
 // ConnectChatChannel mocks base method.

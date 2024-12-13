@@ -33,11 +33,11 @@ func main() {
 	}
 
 	srvCtx, err := srv.NewChatContext(ctx, cfg, config.ServiceName)
-	defer srvCtx.Shutdown()
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("chat server context: %v", err)
 		return
 	}
+	defer srvCtx.Shutdown()
 	ctx, span := srvCtx.Tracer.Start(ctx, "main")
 	defer span.End()
 

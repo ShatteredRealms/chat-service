@@ -33,6 +33,7 @@ const (
 	ChatService_GetAuthorizedChatChannels_FullMethodName      = "/sro.chat.ChatService/GetAuthorizedChatChannels"
 	ChatService_SetCharacterChatChannelAuth_FullMethodName    = "/sro.chat.ChatService/SetCharacterChatChannelAuth"
 	ChatService_UpdateCharacterChatChannelAuth_FullMethodName = "/sro.chat.ChatService/UpdateCharacterChatChannelAuth"
+	ChatService_BanCharacterFromChatChannel_FullMethodName    = "/sro.chat.ChatService/BanCharacterFromChatChannel"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -55,6 +56,7 @@ type ChatServiceClient interface {
 	// If add is true, adds the given channels to the character's chat channels,
 	// otherwise removes them
 	UpdateCharacterChatChannelAuth(ctx context.Context, in *RequestUpdateCharacterSetChatChannelAuth, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	BanCharacterFromChatChannel(ctx context.Context, in *BanRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type chatServiceClient struct {
@@ -203,6 +205,16 @@ func (c *chatServiceClient) UpdateCharacterChatChannelAuth(ctx context.Context, 
 	return out, nil
 }
 
+func (c *chatServiceClient) BanCharacterFromChatChannel(ctx context.Context, in *BanRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, ChatService_BanCharacterFromChatChannel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -223,6 +235,7 @@ type ChatServiceServer interface {
 	// If add is true, adds the given channels to the character's chat channels,
 	// otherwise removes them
 	UpdateCharacterChatChannelAuth(context.Context, *RequestUpdateCharacterSetChatChannelAuth) (*emptypb.Empty, error)
+	BanCharacterFromChatChannel(context.Context, *BanRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -268,6 +281,9 @@ func (UnimplementedChatServiceServer) SetCharacterChatChannelAuth(context.Contex
 }
 func (UnimplementedChatServiceServer) UpdateCharacterChatChannelAuth(context.Context, *RequestUpdateCharacterSetChatChannelAuth) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCharacterChatChannelAuth not implemented")
+}
+func (UnimplementedChatServiceServer) BanCharacterFromChatChannel(context.Context, *BanRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BanCharacterFromChatChannel not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -492,6 +508,24 @@ func _ChatService_UpdateCharacterChatChannelAuth_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_BanCharacterFromChatChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).BanCharacterFromChatChannel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_BanCharacterFromChatChannel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).BanCharacterFromChatChannel(ctx, req.(*BanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -538,6 +572,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCharacterChatChannelAuth",
 			Handler:    _ChatService_UpdateCharacterChatChannelAuth_Handler,
+		},
+		{
+			MethodName: "BanCharacterFromChatChannel",
+			Handler:    _ChatService_BanCharacterFromChatChannel_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

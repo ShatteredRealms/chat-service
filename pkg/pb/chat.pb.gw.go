@@ -473,6 +473,72 @@ func local_request_ChatService_UpdateCharacterChatChannelAuth_0(ctx context.Cont
 	return msg, metadata, err
 }
 
+var filter_ChatService_BanCharacterFromChatChannel_0 = &utilities.DoubleArray{Encoding: map[string]int{"character_id": 0, "channel_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+
+func request_ChatService_BanCharacterFromChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, client ChatServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq BanRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["character_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
+	}
+	protoReq.CharacterId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
+	}
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+	protoReq.ChannelId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_BanCharacterFromChatChannel_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := client.BanCharacterFromChatChannel(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ChatService_BanCharacterFromChatChannel_0(ctx context.Context, marshaler runtime.Marshaler, server ChatServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq BanRequest
+		metadata runtime.ServerMetadata
+		err      error
+	)
+	val, ok := pathParams["character_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "character_id")
+	}
+	protoReq.CharacterId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "character_id", err)
+	}
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+	protoReq.ChannelId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_ChatService_BanCharacterFromChatChannel_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	msg, err := server.BanCharacterFromChatChannel(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterChatServiceHandlerServer registers the http handlers for service ChatService to "mux".
 // UnaryRPC     :call ChatServiceServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -691,6 +757,26 @@ func RegisterChatServiceHandlerServer(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 		forward_ChatService_UpdateCharacterChatChannelAuth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodPost, pattern_ChatService_BanCharacterFromChatChannel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/sro.chat.ChatService/BanCharacterFromChatChannel", runtime.WithHTTPPathPattern("/v1/characters/id/{character_id}/channels/{channel_id}/ban"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ChatService_BanCharacterFromChatChannel_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ChatService_BanCharacterFromChatChannel_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -936,6 +1022,23 @@ func RegisterChatServiceHandlerClient(ctx context.Context, mux *runtime.ServeMux
 		}
 		forward_ChatService_UpdateCharacterChatChannelAuth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodPost, pattern_ChatService_BanCharacterFromChatChannel_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/sro.chat.ChatService/BanCharacterFromChatChannel", runtime.WithHTTPPathPattern("/v1/characters/id/{character_id}/channels/{channel_id}/ban"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ChatService_BanCharacterFromChatChannel_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ChatService_BanCharacterFromChatChannel_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
@@ -952,6 +1055,7 @@ var (
 	pattern_ChatService_GetAuthorizedChatChannels_0      = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v1", "character", "id", "channels"}, ""))
 	pattern_ChatService_SetCharacterChatChannelAuth_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "id", "character_id", "channels"}, ""))
 	pattern_ChatService_UpdateCharacterChatChannelAuth_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v1", "characters", "id", "character_id", "channels"}, ""))
+	pattern_ChatService_BanCharacterFromChatChannel_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"v1", "characters", "id", "character_id", "channels", "channel_id", "ban"}, ""))
 )
 
 var (
@@ -967,4 +1071,5 @@ var (
 	forward_ChatService_GetAuthorizedChatChannels_0      = runtime.ForwardResponseMessage
 	forward_ChatService_SetCharacterChatChannelAuth_0    = runtime.ForwardResponseMessage
 	forward_ChatService_UpdateCharacterChatChannelAuth_0 = runtime.ForwardResponseMessage
+	forward_ChatService_BanCharacterFromChatChannel_0    = runtime.ForwardResponseMessage
 )

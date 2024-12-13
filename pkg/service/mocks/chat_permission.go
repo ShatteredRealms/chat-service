@@ -56,6 +56,21 @@ func (mr *MockChatChannelPermissionServiceMockRecorder) AddForCharacter(ctx, cha
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddForCharacter", reflect.TypeOf((*MockChatChannelPermissionService)(nil).AddForCharacter), ctx, characterId, channelIds)
 }
 
+// GetAccessLevel mocks base method.
+func (m *MockChatChannelPermissionService) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId string) (chat.ChannelPermissionLevel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAccessLevel", ctx, channelId, characterId)
+	ret0, _ := ret[0].(chat.ChannelPermissionLevel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAccessLevel indicates an expected call of GetAccessLevel.
+func (mr *MockChatChannelPermissionServiceMockRecorder) GetAccessLevel(ctx, channelId, characterId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccessLevel", reflect.TypeOf((*MockChatChannelPermissionService)(nil).GetAccessLevel), ctx, channelId, characterId)
+}
+
 // GetForCharacter mocks base method.
 func (m *MockChatChannelPermissionService) GetForCharacter(ctx context.Context, characterId string) (*chat.Channels, error) {
 	m.ctrl.T.Helper()
@@ -69,21 +84,6 @@ func (m *MockChatChannelPermissionService) GetForCharacter(ctx context.Context, 
 func (mr *MockChatChannelPermissionServiceMockRecorder) GetForCharacter(ctx, characterId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetForCharacter", reflect.TypeOf((*MockChatChannelPermissionService)(nil).GetForCharacter), ctx, characterId)
-}
-
-// HasAccess mocks base method.
-func (m *MockChatChannelPermissionService) HasAccess(ctx context.Context, channelId *uuid.UUID, characterId string) (bool, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasAccess", ctx, channelId, characterId)
-	ret0, _ := ret[0].(bool)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// HasAccess indicates an expected call of HasAccess.
-func (mr *MockChatChannelPermissionServiceMockRecorder) HasAccess(ctx, channelId, characterId any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAccess", reflect.TypeOf((*MockChatChannelPermissionService)(nil).HasAccess), ctx, channelId, characterId)
 }
 
 // RemForCharacter mocks base method.

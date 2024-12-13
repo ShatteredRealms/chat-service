@@ -7,7 +7,6 @@ import (
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/ShatteredRealms/chat-service/pkg/pb"
-	"github.com/ShatteredRealms/go-common-service/pkg/bus/character/characterbus"
 	"github.com/ShatteredRealms/go-common-service/pkg/log"
 	commonpb "github.com/ShatteredRealms/go-common-service/pkg/pb"
 	"github.com/ShatteredRealms/go-common-service/pkg/srv"
@@ -36,6 +35,11 @@ var (
 	RoleChatChannelUse = util.RegisterRole(&gocloak.Role{
 		Name:        gocloak.StringP("chat.channel.use"),
 		Description: gocloak.StringP("Allows reading and sending messages in chat channels as yourself"),
+	}, &ChatRoles)
+
+	RoleChatChannelBan = util.RegisterRole(&gocloak.Role{
+		Name:        gocloak.StringP("chat.channel.ban"),
+		Description: gocloak.StringP("Allows banning and unbanning characters from chat channels"),
 	}, &ChatRoles)
 
 	RoleChatDirectUse = util.RegisterRole(&gocloak.Role{
@@ -362,106 +366,28 @@ func (s *chatServiceServer) UpdateCharacterChatChannelAuth(
 	return &emptypb.Empty{}, nil
 }
 
-func (s *chatServiceServer) channelAuthRequestParse(ctx context.Context, charcterId string, stringIds []string) ([]*uuid.UUID, error) {
-	_, err := s.validateRole(ctx, RoleChatPermissionsManagement)
+// BanCharacterFromChatChannel implements pb.ChatServiceServer.
+func (s *chatServiceServer) BanCharacterFromChatChannel(ctx context.Context, request *pb.BanRequest) (*emptypb.Empty, error) {
+	_, err := s.validateRole(ctx, RoleChatChannelBan)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.getCharacter(ctx, charcterId)
-	if err != nil {
-		return nil, err
-	}
-
-	ids, err := util.ParseUUIDs(stringIds)
-	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatIdInvalid, err)
-		return nil, status.Error(codes.InvalidArgument, ErrChatIdInvalid.Error())
-	}
-
-	return ids, nil
-}
-
-func (s *chatServiceServer) validateChannelPermissions(
-	ctx context.Context,
-	channelId, characterId string,
-	minLevel chat.ChannelPermissionLevel,
-) (*uuid.UUID, error) {
-	claims, err := s.validateRole(ctx, RoleChatChannelUse)
-	if err != nil {
-		return nil, err
-	}
-
-	channel, err := s.getChatChannel(ctx, channelId)
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.validateCharacterOwner(ctx, characterId, claims.Subject)
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate character has perssions to access channel
-	level, err := s.Context.ChatChannelPermissionService.GetAccessLevel(ctx, &channel.Id, characterId)
-	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatPermissionGet, err)
-		return nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
-	}
-
-	if level < minLevel {
-		log.Logger.WithContext(ctx).
-			Warnf("user '%s' and character '%s' tried accessing '%s' but has no permissions",
-				claims.Subject, characterId, channelId)
-		return nil, srv.ErrPermissionDenied
-	}
-
-	return &channel.Id, nil
-}
-
-func (s *chatServiceServer) getChatChannel(ctx context.Context, channelId string) (*chat.Channel, error) {
-	id, err := uuid.Parse(channelId)
+	channelId, err := uuid.Parse(request.ChannelId)
 	if err != nil {
 		return nil, ErrChatIdInvalid
 	}
 
-	channel, err := s.Context.ChatChannelService.GetById(ctx, &id)
+	_, err = s.getCharacter(ctx, request.CharacterId)
 	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("error getting chat channel: %v", err)
-		return nil, status.Error(codes.Internal, ErrChatGet.Error())
-	}
-	if channel == nil {
-		return nil, status.Error(codes.InvalidArgument, ErrChatDoesNotExist.Error())
+		return nil, err
 	}
 
-	return channel, nil
-}
-
-func (s *chatServiceServer) getCharacter(ctx context.Context, characterId string) (*characterbus.Character, error) {
-	character, err := s.Context.CharacterService.GetCharacterById(ctx, characterId)
+	err = s.Context.ChatChannelPermissionService.BanCharacter(ctx, request.CharacterId, &channelId, request.Duration)
 	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("error getting character: %v", err)
-		return nil, status.Error(codes.Internal, ErrCharacterLookup.Error())
-	}
-	if character == nil {
-		return nil, status.Error(codes.InvalidArgument, ErrCharacterNotExist.Error())
-	}
-	return character, nil
-}
-
-func (s *chatServiceServer) validateCharacterOwner(ctx context.Context, characterId string, ownerId string) error {
-	// Validate sender owns character
-	character, err := s.getCharacter(ctx, characterId)
-	if err != nil {
-		return err
+		log.Logger.WithContext(ctx).Errorf("error banning character '%s' from channel '%s': %v", request.CharacterId, request.ChannelId, err)
+		return nil, status.Error(codes.Internal, ErrChatPermissionSet.Error())
 	}
 
-	if character.OwnerId != ownerId {
-		log.Logger.WithContext(ctx).
-			Warnf("user '%s' tried chat acesss for character '%s' with owner '%s'",
-				ownerId, character.Id, character.OwnerId)
-		return srv.ErrPermissionDenied
-	}
-
-	return nil
+	return &emptypb.Empty{}, nil
 }

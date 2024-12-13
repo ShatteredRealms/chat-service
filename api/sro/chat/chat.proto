@@ -93,6 +93,22 @@ service ChatService {
       put : "/v1/characters/id/{character_id}/channels"
     };
   }
+
+  rpc BanCharacterFromChatChannel(BanRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post : "/v1/characters/id/{character_id}/channels/{channel_id}/ban"
+    };
+  }
+}
+
+message BanRequest {
+  string character_id = 1;
+  string channel_id = 2;
+
+  // Duration in seconds.
+  // If 0, the ban is will not expire.
+  // If -1, the ban is lifted.
+  int64 duration = 3;
 }
 
 message ConnectChatChannelRequest {

@@ -9,7 +9,9 @@ import (
 type ChannelPermissionLevel int8
 
 const (
-	PermissionNone ChannelPermissionLevel = iota
+	// Channel Permission Levels. The lower, the more restrictive.
+	PermissionPermBan ChannelPermissionLevel = iota
+	PermissionNone
 	PermissionRead
 	PermissionReadSend
 )
@@ -22,9 +24,17 @@ type ChannelPermission struct {
 type ChannelPermissions []*ChannelPermission
 
 func (cp *ChannelPermission) Level() ChannelPermissionLevel {
-	if cp.ChatBannedUntil == nil || cp.ChatBannedUntil.Before(time.Now()) {
+	if cp.ChatBannedUntil == nil {
 		return PermissionReadSend
 	}
 
-	return PermissionRead
+	if cp.ChatBannedUntil.Equal(time.Time{}) {
+		return PermissionPermBan
+	}
+
+	if cp.ChatBannedUntil.After(time.Now().UTC()) {
+		return PermissionRead
+	}
+
+	return PermissionReadSend
 }

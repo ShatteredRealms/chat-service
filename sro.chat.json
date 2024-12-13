@@ -2,6 +2,23 @@
   "openapi": "3.0.1",
   "components": {
     "schemas": {
+      "sro.chat.BanRequest": {
+        "properties": {
+          "channelId": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": "string"
+          },
+          "duration": {
+            "description": "Duration in seconds. If 0, the ban is will not expire. If -1, the ban is lifted.",
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
+          }
+        },
+        "type": "object"
+      },
       "sro.chat.ChatChannel": {
         "properties": {
           "dimensionId": {
