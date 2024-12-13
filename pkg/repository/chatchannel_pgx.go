@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
@@ -133,13 +135,69 @@ func (p *chatChannelPgxRepository) Save(ctx context.Context, channel *chat.Chann
 
 	ct, err := tx.Exec(ctx,
 		"UPDATE chat_channels SET name = $2, dimension_id = $3, updated_at = $4 WHERE id = $1",
-		channel.Id, channel.Name, channel.DimensionId, time.Now(),
+		channel.Id, channel.Name, channel.DimensionId, time.Now().UTC(),
 	)
 	if ct.RowsAffected() == 0 {
 		return nil, ErrDoesNotExist
 	}
 
 	outChannel, err := p.queryById(ctx, tx, &channel.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return outChannel, nil
+}
+
+// Update implements ChatChannelRepository.
+func (p *chatChannelPgxRepository) Update(ctx context.Context, request *UpdateRequest) (*chat.Channel, error) {
+	tx, err := p.conn.Begin(ctx)
+	defer tx.Rollback(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	updates := make(map[string]any)
+	if request.Name != nil {
+		updates["name"] = *request.Name
+	}
+	if request.DimensionId != nil {
+		updates["dimension_id"] = *request.DimensionId
+	}
+
+	if len(updates) == 0 {
+		return nil, ErrNoUpdates
+	}
+
+	builder := strings.Builder{}
+	builder.WriteString("UPDATE chat_channels SET updated_at = $2")
+	vals := make([]any, 0, len(updates)+2)
+	vals = append(vals, request.ChannelId)
+	vals = append(vals, time.Now().UTC())
+	argNum := 3
+	for column, value := range updates {
+		builder.WriteString(fmt.Sprintf(", %s = $%d", column, argNum))
+		argNum++
+		vals = append(vals, value)
+	}
+	builder.WriteString(" WHERE id = $1")
+
+	ct, err := tx.Exec(ctx, builder.String(), vals...)
+	if ct.RowsAffected() == 0 {
+		return nil, ErrDoesNotExist
+	}
+
+	outChannel, err := p.queryById(ctx, tx, request.ChannelId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = outChannel.Validate()
 	if err != nil {
 		return nil, err
 	}

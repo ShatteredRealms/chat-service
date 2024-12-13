@@ -4,21 +4,45 @@ import (
 	"context"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
+	"github.com/ShatteredRealms/chat-service/pkg/pb"
 	"github.com/ShatteredRealms/chat-service/pkg/repository"
 	"github.com/google/uuid"
 )
 
 type ChatChannelService interface {
 	GetAll(ctx context.Context) (*chat.Channels, error)
-	GetById(ctx context.Context, id *uuid.UUID) (*chat.Channel, error)
+	GetById(ctx context.Context, id string) (*chat.Channel, error)
 
 	Create(ctx context.Context, name string, dimensionId string) (*chat.Channel, error)
 	Save(ctx context.Context, channel *chat.Channel) (*chat.Channel, error)
-	Delete(ctx context.Context, channelId *uuid.UUID) error
+	Update(ctx context.Context, pbRequest *pb.UpdateChatChannelRequest) (*chat.Channel, error)
+	Delete(ctx context.Context, channelId string) error
 }
 
 type chatChannelService struct {
 	repo repository.ChatChannelRepository
+}
+
+// Update implements ChatChannelService.
+func (c *chatChannelService) Update(ctx context.Context, pbRequest *pb.UpdateChatChannelRequest) (*chat.Channel, error) {
+	id, err := uuid.Parse(pbRequest.ChannelId)
+	if err != nil {
+		return nil, err
+	}
+
+	request := &repository.UpdateRequest{
+		ChannelId: &id,
+	}
+	if pbRequest.OptionalName != nil {
+		name := pbRequest.GetName()
+		request.Name = &name
+	}
+	if pbRequest.OptionalDimension != nil {
+		dimensionId := pbRequest.GetDimension()
+		request.DimensionId = &dimensionId
+	}
+
+	return c.repo.Update(ctx, request)
 }
 
 func NewChatChannelService(repo repository.ChatChannelRepository) ChatChannelService {
@@ -33,12 +57,22 @@ func (c *chatChannelService) Create(ctx context.Context, name string, dimensionI
 		Name:        name,
 		DimensionId: dimensionId,
 	}
+	err := channel.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	return c.repo.Create(ctx, channel)
 }
 
 // Delete implements ChatChannelService.
-func (c *chatChannelService) Delete(ctx context.Context, channelId *uuid.UUID) error {
-	return c.repo.Delete(ctx, channelId)
+func (c *chatChannelService) Delete(ctx context.Context, channelId string) error {
+	id, err := uuid.Parse(channelId)
+	if err != nil {
+		return err
+	}
+
+	return c.repo.Delete(ctx, &id)
 }
 
 // GetAll implements ChatChannelService.
@@ -47,8 +81,12 @@ func (c *chatChannelService) GetAll(ctx context.Context) (*chat.Channels, error)
 }
 
 // GetById implements ChatChannelService.
-func (c *chatChannelService) GetById(ctx context.Context, id *uuid.UUID) (*chat.Channel, error) {
-	return c.repo.GetById(ctx, id)
+func (c *chatChannelService) GetById(ctx context.Context, channelId string) (*chat.Channel, error) {
+	id, err := uuid.Parse(channelId)
+	if err != nil {
+		return nil, err
+	}
+	return c.repo.GetById(ctx, &id)
 }
 
 // Save implements ChatChannelService.

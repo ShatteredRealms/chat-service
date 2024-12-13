@@ -187,12 +187,7 @@ func (s *chatServiceServer) DeleteChatChannel(ctx context.Context, request *comm
 		return nil, err
 	}
 
-	id, err := uuid.Parse(request.Id)
-	if err != nil {
-		return nil, ErrChatIdInvalid
-	}
-
-	err = s.Context.ChatChannelService.Delete(ctx, &id)
+	err = s.Context.ChatChannelService.Delete(ctx, request.Id)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatDelete, err)
 		return nil, ErrChatDelete
@@ -202,8 +197,19 @@ func (s *chatServiceServer) DeleteChatChannel(ctx context.Context, request *comm
 }
 
 // EditChatChannel implements pb.ChatServiceServer.
-func (s *chatServiceServer) EditChatChannel(context.Context, *pb.UpdateChatChannelRequest) (*emptypb.Empty, error) {
-	panic("unimplemented")
+func (s *chatServiceServer) EditChatChannel(ctx context.Context, request *pb.UpdateChatChannelRequest) (*emptypb.Empty, error) {
+	_, err := s.validateRole(ctx, RoleChatManagement)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = s.Context.ChatChannelService.Update(ctx, request)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatEdit, err)
+		return nil, status.Errorf(codes.InvalidArgument, ErrChatEdit.Error())
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 // GetAuthorizedChatChannels implements pb.ChatServiceServer.
@@ -241,12 +247,7 @@ func (s *chatServiceServer) GetChatChannel(ctx context.Context, request *commonp
 		return nil, err
 	}
 
-	id, err := uuid.Parse(request.Id)
-	if err != nil {
-		return nil, ErrChatIdInvalid
-	}
-
-	channel, err := s.Context.ChatChannelService.GetById(ctx, &id)
+	channel, err := s.Context.ChatChannelService.GetById(ctx, request.Id)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatGet, err)
 		return nil, ErrChatGet

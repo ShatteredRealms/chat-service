@@ -22,9 +22,9 @@ type ChatService interface {
 }
 
 type chatService struct {
-	kafkaBrokers       []string
-	openChannelReaders map[uuid.UUID]map[string]*kafka.Reader
-	openDirectReaders  map[string]map[string]*kafka.Reader
+	kafkaBrokers   []string
+	channelReaders map[uuid.UUID]map[string]*kafka.Reader
+	directReaders  map[string]map[string]*kafka.Reader
 
 	shuttingDown bool
 
@@ -37,7 +37,15 @@ func (s *chatService) Shutdown(ctx context.Context) error {
 	s.shuttingDown = true
 
 	var errs error
-	for _, readers := range s.openChannelReaders {
+	for _, readers := range s.channelReaders {
+		for _, reader := range readers {
+			err := reader.Close()
+			if err != nil {
+				errs = errors.Join(errs, err)
+			}
+		}
+	}
+	for _, readers := range s.directReaders {
 		for _, reader := range readers {
 			err := reader.Close()
 			if err != nil {
@@ -47,15 +55,17 @@ func (s *chatService) Shutdown(ctx context.Context) error {
 	}
 
 	s.wg.Wait()
+	s.directReaders = make(map[string]map[string]*kafka.Reader)
+	s.channelReaders = make(map[uuid.UUID]map[string]*kafka.Reader)
 	s.shuttingDown = false
 	return errs
 }
 
 func NewChatService(kafkaBrokers []string) ChatService {
 	return &chatService{
-		kafkaBrokers:       kafkaBrokers,
-		openChannelReaders: make(map[uuid.UUID]map[string]*kafka.Reader),
-		openDirectReaders:  make(map[string]map[string]*kafka.Reader),
+		kafkaBrokers:   kafkaBrokers,
+		channelReaders: make(map[uuid.UUID]map[string]*kafka.Reader),
+		directReaders:  make(map[string]map[string]*kafka.Reader),
 	}
 }
 
@@ -75,7 +85,7 @@ func (s *chatService) ReceiveChannelMessages(
 		defer close(outChan)
 		defer s.wg.Done()
 
-		reader, ok := s.openChannelReaders[*channelId][receiverCharacterId]
+		reader, ok := s.channelReaders[*channelId][receiverCharacterId]
 		if !ok {
 			reader = kafka.NewReader(kafka.ReaderConfig{
 				Brokers: s.kafkaBrokers,
@@ -84,12 +94,14 @@ func (s *chatService) ReceiveChannelMessages(
 				Logger:  kafka.LoggerFunc(log.Logger.Tracef),
 			})
 			s.mu.Lock()
-			if _, ok := s.openChannelReaders[*channelId]; !ok {
-				s.openChannelReaders[*channelId] = make(map[string]*kafka.Reader)
+			if _, ok := s.channelReaders[*channelId]; !ok {
+				s.channelReaders[*channelId] = make(map[string]*kafka.Reader)
 			}
-			s.openChannelReaders[*channelId][receiverCharacterId] = reader
+			s.channelReaders[*channelId][receiverCharacterId] = reader
 			s.mu.Unlock()
 		}
+		defer reader.Close()
+		defer delete(s.channelReaders[*channelId], receiverCharacterId)
 
 		for {
 			select {
@@ -98,12 +110,14 @@ func (s *chatService) ReceiveChannelMessages(
 			default:
 				kafkaMessage, err := reader.ReadMessage(ctx)
 				if err != nil {
-					log.Logger.Errorf(
-						"error reading message from kafka for channel %s and character %s: %v",
-						channelId.String(),
-						receiverCharacterId,
-						err,
-					)
+					if !errors.Is(err, context.Canceled) {
+						log.Logger.Errorf(
+							"error reading message from kafka for channel %s and character %s: %v",
+							channelId.String(),
+							receiverCharacterId,
+							err,
+						)
+					}
 					return
 				}
 
@@ -127,7 +141,7 @@ func (s *chatService) ReceiveDirectMessage(ctx context.Context, targetCharacterI
 		defer close(outChan)
 		defer s.wg.Done()
 
-		reader, ok := s.openDirectReaders[targetCharacterId][receiverUserId]
+		reader, ok := s.directReaders[targetCharacterId][receiverUserId]
 		if !ok {
 			reader = kafka.NewReader(kafka.ReaderConfig{
 				Brokers: s.kafkaBrokers,
@@ -136,12 +150,14 @@ func (s *chatService) ReceiveDirectMessage(ctx context.Context, targetCharacterI
 				Logger:  kafka.LoggerFunc(log.Logger.Tracef),
 			})
 			s.mu.Lock()
-			if _, ok := s.openDirectReaders[targetCharacterId]; !ok {
-				s.openDirectReaders[targetCharacterId] = make(map[string]*kafka.Reader)
+			if _, ok := s.directReaders[targetCharacterId]; !ok {
+				s.directReaders[targetCharacterId] = make(map[string]*kafka.Reader)
 			}
-			s.openDirectReaders[targetCharacterId][receiverUserId] = reader
+			s.directReaders[targetCharacterId][receiverUserId] = reader
 			s.mu.Unlock()
 		}
+		defer reader.Close()
+		defer delete(s.directReaders[targetCharacterId], receiverUserId)
 
 		for {
 			select {
@@ -150,12 +166,14 @@ func (s *chatService) ReceiveDirectMessage(ctx context.Context, targetCharacterI
 			default:
 				kafkaMessage, err := reader.ReadMessage(ctx)
 				if err != nil {
-					log.Logger.Errorf(
-						"error reading message from kafka for direct message to %s for user %s: %v",
-						targetCharacterId,
-						receiverUserId,
-						err,
-					)
+					if !errors.Is(err, context.Canceled) {
+						log.Logger.Errorf(
+							"error reading message from kafka for direct message to %s for user %s: %v",
+							targetCharacterId,
+							receiverUserId,
+							err,
+						)
+					}
 					return
 				}
 

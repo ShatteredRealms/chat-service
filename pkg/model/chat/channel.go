@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"errors"
 	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/pb"
@@ -34,4 +35,12 @@ func (c Channels) ToPb() *pb.ChatChannels {
 	}
 
 	return resp
+}
+
+func (c *Channel) Validate() error {
+	if c.Name == "" {
+		return errors.New("name is required")
+	}
+
+	return nil
 }

@@ -71,12 +71,7 @@ func (s *chatServiceServer) validateChannelPermissions(
 }
 
 func (s *chatServiceServer) getChatChannel(ctx context.Context, channelId string) (*chat.Channel, error) {
-	id, err := uuid.Parse(channelId)
-	if err != nil {
-		return nil, ErrChatIdInvalid
-	}
-
-	channel, err := s.Context.ChatChannelService.GetById(ctx, &id)
+	channel, err := s.Context.ChatChannelService.GetById(ctx, channelId)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("error getting chat channel: %v", err)
 		return nil, status.Error(codes.Internal, ErrChatGet.Error())
