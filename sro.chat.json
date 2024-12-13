@@ -11,7 +11,7 @@
             "type": "string"
           },
           "duration": {
-            "description": "Duration in seconds. If 0, the ban is will not expire. If -1, the ban is lifted.",
+            "description": "Duration in seconds. If 0, the ban is will not expire. If -1, the ban is lifted. int64 duration = 3;",
             "format": "int64",
             "type": "integer",
             "x-kubernetes-int-or-string": true
@@ -51,6 +51,88 @@
               "type": "object"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.ChatLog": {
+        "properties": {
+          "channelId": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "sentAt": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.ChatLogRequest": {
+        "properties": {
+          "after": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
+          },
+          "before": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
+          },
+          "channelId": {
+            "type": "string"
+          },
+          "limit": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
+          },
+          "offset": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
+          },
+          "senderId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "sro.chat.ChatLogs": {
+        "properties": {
+          "logs": {
+            "items": {
+              "properties": {
+                "channelId": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                },
+                "senderId": {
+                  "type": "string"
+                },
+                "sentAt": {
+                  "format": "int64",
+                  "type": "integer",
+                  "x-kubernetes-int-or-string": true
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
           }
         },
         "type": "object"

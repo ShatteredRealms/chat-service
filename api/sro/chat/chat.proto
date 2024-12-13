@@ -99,6 +99,33 @@ service ChatService {
       post : "/v1/characters/id/{character_id}/channels/{channel_id}/ban"
     };
   }
+
+  rpc GetChatLogs(ChatLogRequest) returns (ChatLogs) {
+    option (google.api.http) = {
+      get : "/v1/chat/{channel_id}/logs"
+    };
+  }
+}
+
+message ChatLogRequest {
+  string channel_id = 1;
+  oneof optional_sender_id { string sender_id = 2; }
+  oneof optional_before { int64 before = 3; }
+  oneof optional_after { int64 after = 4; }
+  oneof optional_limit { uint64 limit = 5; }
+  oneof optional_offset { uint64 offset = 6; }
+}
+
+message ChatLog {
+  uint64 sent_at = 1;
+  string channel_id = 2;
+  string sender_id = 3;
+  string content = 4;
+}
+
+message ChatLogs {
+  uint64 total = 1;
+  repeated ChatLog logs = 2;
 }
 
 message BanRequest {
@@ -107,7 +134,7 @@ message BanRequest {
 
   // Duration in seconds.
   // If 0, the ban is will not expire.
-  // If -1, the ban is lifted.
+  // If -1, the ban is lifted. int64 duration = 3;
   int64 duration = 3;
 }
 

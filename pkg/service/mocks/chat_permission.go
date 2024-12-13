@@ -56,6 +56,20 @@ func (mr *MockChatChannelPermissionServiceMockRecorder) AddForCharacter(ctx, cha
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddForCharacter", reflect.TypeOf((*MockChatChannelPermissionService)(nil).AddForCharacter), ctx, characterId, channelIds)
 }
 
+// BanCharacter mocks base method.
+func (m *MockChatChannelPermissionService) BanCharacter(ctx context.Context, characterId string, channelId *uuid.UUID, durationSec int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BanCharacter", ctx, characterId, channelId, durationSec)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BanCharacter indicates an expected call of BanCharacter.
+func (mr *MockChatChannelPermissionServiceMockRecorder) BanCharacter(ctx, characterId, channelId, durationSec any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BanCharacter", reflect.TypeOf((*MockChatChannelPermissionService)(nil).BanCharacter), ctx, characterId, channelId, durationSec)
+}
+
 // GetAccessLevel mocks base method.
 func (m *MockChatChannelPermissionService) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId string) (chat.ChannelPermissionLevel, error) {
 	m.ctrl.T.Helper()

@@ -12,6 +12,7 @@ package mock_repository
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	chat "github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	uuid "github.com/google/uuid"
@@ -43,7 +44,7 @@ func (m *MockChatChannelPermissionRepository) EXPECT() *MockChatChannelPermissio
 }
 
 // AddForCharacter mocks base method.
-func (m *MockChatChannelPermissionRepository) AddForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
+func (m *MockChatChannelPermissionRepository) AddForCharacter(ctx context.Context, characterId *uuid.UUID, channelIds []*uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddForCharacter", ctx, characterId, channelIds)
 	ret0, _ := ret[0].(error)
@@ -56,8 +57,22 @@ func (mr *MockChatChannelPermissionRepositoryMockRecorder) AddForCharacter(ctx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddForCharacter", reflect.TypeOf((*MockChatChannelPermissionRepository)(nil).AddForCharacter), ctx, characterId, channelIds)
 }
 
+// BanCharacter mocks base method.
+func (m *MockChatChannelPermissionRepository) BanCharacter(ctx context.Context, characterId, channelId *uuid.UUID, until *time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BanCharacter", ctx, characterId, channelId, until)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BanCharacter indicates an expected call of BanCharacter.
+func (mr *MockChatChannelPermissionRepositoryMockRecorder) BanCharacter(ctx, characterId, channelId, until any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BanCharacter", reflect.TypeOf((*MockChatChannelPermissionRepository)(nil).BanCharacter), ctx, characterId, channelId, until)
+}
+
 // GetAccessLevel mocks base method.
-func (m *MockChatChannelPermissionRepository) GetAccessLevel(ctx context.Context, channelId *uuid.UUID, characterId string) (chat.ChannelPermissionLevel, error) {
+func (m *MockChatChannelPermissionRepository) GetAccessLevel(ctx context.Context, channelId, characterId *uuid.UUID) (chat.ChannelPermissionLevel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccessLevel", ctx, channelId, characterId)
 	ret0, _ := ret[0].(chat.ChannelPermissionLevel)
@@ -72,7 +87,7 @@ func (mr *MockChatChannelPermissionRepositoryMockRecorder) GetAccessLevel(ctx, c
 }
 
 // GetForCharacter mocks base method.
-func (m *MockChatChannelPermissionRepository) GetForCharacter(ctx context.Context, characterId string) (*chat.Channels, error) {
+func (m *MockChatChannelPermissionRepository) GetForCharacter(ctx context.Context, characterId *uuid.UUID) (*chat.Channels, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetForCharacter", ctx, characterId)
 	ret0, _ := ret[0].(*chat.Channels)
@@ -87,7 +102,7 @@ func (mr *MockChatChannelPermissionRepositoryMockRecorder) GetForCharacter(ctx, 
 }
 
 // RemForCharacter mocks base method.
-func (m *MockChatChannelPermissionRepository) RemForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
+func (m *MockChatChannelPermissionRepository) RemForCharacter(ctx context.Context, characterId *uuid.UUID, channelIds []*uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemForCharacter", ctx, characterId, channelIds)
 	ret0, _ := ret[0].(error)
@@ -101,7 +116,7 @@ func (mr *MockChatChannelPermissionRepositoryMockRecorder) RemForCharacter(ctx, 
 }
 
 // SaveForCharacter mocks base method.
-func (m *MockChatChannelPermissionRepository) SaveForCharacter(ctx context.Context, characterId string, channelIds []*uuid.UUID) error {
+func (m *MockChatChannelPermissionRepository) SaveForCharacter(ctx context.Context, characterId *uuid.UUID, channelIds []*uuid.UUID) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveForCharacter", ctx, characterId, channelIds)
 	ret0, _ := ret[0].(error)

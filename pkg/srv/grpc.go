@@ -37,6 +37,11 @@ var (
 		Description: gocloak.StringP("Allows reading and sending messages in chat channels as yourself"),
 	}, &ChatRoles)
 
+	RoleChatLogs = util.RegisterRole(&gocloak.Role{
+		Name:        gocloak.StringP("chat.channel.logs"),
+		Description: gocloak.StringP("Allows reading chat logs for a chat channel or direct messages"),
+	}, &ChatRoles)
+
 	RoleChatChannelBan = util.RegisterRole(&gocloak.Role{
 		Name:        gocloak.StringP("chat.channel.ban"),
 		Description: gocloak.StringP("Allows banning and unbanning characters from chat channels"),
@@ -296,14 +301,20 @@ func (s *chatServiceServer) SendChatChannelMessage(ctx context.Context, request 
 	if dimensionId == nil {
 		dimensionId = &character.DimensionId
 	}
-	err = s.Context.ChatService.SendChannelMessage(ctx, &channel.Id, dimensionId, &chat.Message{
+	msg := &chat.Message{
 		SenderCharacterId: request.ChatMessage.SenderCharacterId,
 		Content:           request.ChatMessage.Content,
-	})
+	}
+	err = s.Context.ChatService.SendChannelMessage(ctx, &channel.Id, dimensionId, msg)
 
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("error sending message: %v", err)
 		return nil, status.Errorf(codes.Internal, ErrChatSend.Error())
+	}
+
+	err = s.Context.ChatLogService.AddMessage(ctx, &channel.Id, dimensionId, msg)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("error saving message to chat log: %v", err)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -333,15 +344,21 @@ func (s *chatServiceServer) SendDirectMessage(
 		return nil, status.Errorf(codes.NotFound, "character not found")
 	}
 
-	err = s.Context.ChatService.SendDirectMessage(ctx, &targetCharacter.Id, &chat.Message{
+	msg := &chat.Message{
 		SenderCharacterId: request.ChatMessage.SenderCharacterId,
 		Content:           request.ChatMessage.Content,
-	})
+	}
+	err = s.Context.ChatService.SendDirectMessage(ctx, &targetCharacter.Id, msg)
 	if err != nil {
 		log.Logger.WithContext(ctx).
 			Errorf("%v: sending direct message from '%s' to '%s': %v",
 				ErrChatSend.Error(), request.ChatMessage.SenderCharacterId, request.CharacterId, err)
 		return nil, status.Errorf(codes.Internal, ErrChatSend.Error())
+	}
+
+	err = s.Context.ChatLogService.AddMessage(ctx, &targetCharacter.Id, &targetCharacter.DimensionId, msg)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("error saving message to chat log: %v", err)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -413,4 +430,23 @@ func (s *chatServiceServer) BanCharacterFromChatChannel(ctx context.Context, req
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+// GetChatLogs implements pb.ChatServiceServer.
+func (s *chatServiceServer) GetChatLogs(ctx context.Context, request *pb.ChatLogRequest) (*pb.ChatLogs, error) {
+	_, err := s.validateRole(ctx, RoleChatLogs)
+	if err != nil {
+		return nil, err
+	}
+
+	msgs, total, err := s.Context.ChatLogService.GetMessages(ctx, request)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("error getting chat logs: %v", err)
+		return nil, status.Error(codes.Internal, "error getting chat logs")
+	}
+
+	return &pb.ChatLogs{
+		Logs:  msgs.ToPb().Logs,
+		Total: uint64(total),
+	}, nil
 }

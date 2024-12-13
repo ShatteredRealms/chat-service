@@ -20,6 +20,7 @@ type ChatContext struct {
 	*srv.Context
 
 	ChatService                  service.ChatService
+	ChatLogService               service.ChatLogService
 	ChatChannelService           service.ChatChannelService
 	ChatChannelPermissionService service.ChatChannelPermissionService
 
@@ -53,7 +54,9 @@ func NewChatContext(ctx context.Context, cfg *config.ChatConfig, serviceName str
 	chatCtx.ChatChannelPermissionService = service.NewChatChannelPermissionService(
 		repository.NewChatChannelPermissionPgxRepository(migrater),
 	)
-
+	chatCtx.ChatLogService = service.NewChatLogService(
+		repository.NewChatLogPgxRepository(migrater),
+	)
 	chatCtx.DimensionService = dimensionbus.NewService(
 		dimensionbus.NewPostgresRepository(pg),
 		bus.NewKafkaMessageBusReader(cfg.Kafka, serviceName, dimensionbus.Message{}),

@@ -43,51 +43,51 @@ func (m *MockChatService) EXPECT() *MockChatServiceMockRecorder {
 }
 
 // ReceiveChannelMessages mocks base method.
-func (m *MockChatService) ReceiveChannelMessages(ctx context.Context, channelId *uuid.UUID, receiverCharacterId string) (chan *chat.Message, error) {
+func (m *MockChatService) ReceiveChannelMessages(ctx context.Context, channelId, dimensionId, receiverCharacterId *uuid.UUID) (chan *chat.Message, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReceiveChannelMessages", ctx, channelId, receiverCharacterId)
+	ret := m.ctrl.Call(m, "ReceiveChannelMessages", ctx, channelId, dimensionId, receiverCharacterId)
 	ret0, _ := ret[0].(chan *chat.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ReceiveChannelMessages indicates an expected call of ReceiveChannelMessages.
-func (mr *MockChatServiceMockRecorder) ReceiveChannelMessages(ctx, channelId, receiverCharacterId any) *gomock.Call {
+func (mr *MockChatServiceMockRecorder) ReceiveChannelMessages(ctx, channelId, dimensionId, receiverCharacterId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveChannelMessages", reflect.TypeOf((*MockChatService)(nil).ReceiveChannelMessages), ctx, channelId, receiverCharacterId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveChannelMessages", reflect.TypeOf((*MockChatService)(nil).ReceiveChannelMessages), ctx, channelId, dimensionId, receiverCharacterId)
 }
 
-// ReceiveDirectMessage mocks base method.
-func (m *MockChatService) ReceiveDirectMessage(ctx context.Context, targetCharacterId, receiverCharacterId string) (chan *chat.Message, error) {
+// ReceiveDirectMessages mocks base method.
+func (m *MockChatService) ReceiveDirectMessages(ctx context.Context, targetCharacterId, receiverCharacterId *uuid.UUID) (chan *chat.Message, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReceiveDirectMessage", ctx, targetCharacterId, receiverCharacterId)
+	ret := m.ctrl.Call(m, "ReceiveDirectMessages", ctx, targetCharacterId, receiverCharacterId)
 	ret0, _ := ret[0].(chan *chat.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ReceiveDirectMessage indicates an expected call of ReceiveDirectMessage.
-func (mr *MockChatServiceMockRecorder) ReceiveDirectMessage(ctx, targetCharacterId, receiverCharacterId any) *gomock.Call {
+// ReceiveDirectMessages indicates an expected call of ReceiveDirectMessages.
+func (mr *MockChatServiceMockRecorder) ReceiveDirectMessages(ctx, targetCharacterId, receiverCharacterId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveDirectMessage", reflect.TypeOf((*MockChatService)(nil).ReceiveDirectMessage), ctx, targetCharacterId, receiverCharacterId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceiveDirectMessages", reflect.TypeOf((*MockChatService)(nil).ReceiveDirectMessages), ctx, targetCharacterId, receiverCharacterId)
 }
 
 // SendChannelMessage mocks base method.
-func (m *MockChatService) SendChannelMessage(ctx context.Context, channelId *uuid.UUID, msg *chat.Message) error {
+func (m *MockChatService) SendChannelMessage(ctx context.Context, channelId, dimensionId *uuid.UUID, msg *chat.Message) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendChannelMessage", ctx, channelId, msg)
+	ret := m.ctrl.Call(m, "SendChannelMessage", ctx, channelId, dimensionId, msg)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendChannelMessage indicates an expected call of SendChannelMessage.
-func (mr *MockChatServiceMockRecorder) SendChannelMessage(ctx, channelId, msg any) *gomock.Call {
+func (mr *MockChatServiceMockRecorder) SendChannelMessage(ctx, channelId, dimensionId, msg any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendChannelMessage", reflect.TypeOf((*MockChatService)(nil).SendChannelMessage), ctx, channelId, msg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendChannelMessage", reflect.TypeOf((*MockChatService)(nil).SendChannelMessage), ctx, channelId, dimensionId, msg)
 }
 
 // SendDirectMessage mocks base method.
-func (m *MockChatService) SendDirectMessage(ctx context.Context, targetCharacterId string, msg *chat.Message) error {
+func (m *MockChatService) SendDirectMessage(ctx context.Context, targetCharacterId *uuid.UUID, msg *chat.Message) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendDirectMessage", ctx, targetCharacterId, msg)
 	ret0, _ := ret[0].(error)

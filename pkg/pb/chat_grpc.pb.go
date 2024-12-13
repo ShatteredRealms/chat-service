@@ -34,6 +34,7 @@ const (
 	ChatService_SetCharacterChatChannelAuth_FullMethodName    = "/sro.chat.ChatService/SetCharacterChatChannelAuth"
 	ChatService_UpdateCharacterChatChannelAuth_FullMethodName = "/sro.chat.ChatService/UpdateCharacterChatChannelAuth"
 	ChatService_BanCharacterFromChatChannel_FullMethodName    = "/sro.chat.ChatService/BanCharacterFromChatChannel"
+	ChatService_GetChatLogs_FullMethodName                    = "/sro.chat.ChatService/GetChatLogs"
 )
 
 // ChatServiceClient is the client API for ChatService service.
@@ -57,6 +58,7 @@ type ChatServiceClient interface {
 	// otherwise removes them
 	UpdateCharacterChatChannelAuth(ctx context.Context, in *RequestUpdateCharacterSetChatChannelAuth, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	BanCharacterFromChatChannel(ctx context.Context, in *BanRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetChatLogs(ctx context.Context, in *ChatLogRequest, opts ...grpc.CallOption) (*ChatLogs, error)
 }
 
 type chatServiceClient struct {
@@ -215,6 +217,16 @@ func (c *chatServiceClient) BanCharacterFromChatChannel(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *chatServiceClient) GetChatLogs(ctx context.Context, in *ChatLogRequest, opts ...grpc.CallOption) (*ChatLogs, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChatLogs)
+	err := c.cc.Invoke(ctx, ChatService_GetChatLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ChatServiceServer is the server API for ChatService service.
 // All implementations must embed UnimplementedChatServiceServer
 // for forward compatibility.
@@ -236,6 +248,7 @@ type ChatServiceServer interface {
 	// otherwise removes them
 	UpdateCharacterChatChannelAuth(context.Context, *RequestUpdateCharacterSetChatChannelAuth) (*emptypb.Empty, error)
 	BanCharacterFromChatChannel(context.Context, *BanRequest) (*emptypb.Empty, error)
+	GetChatLogs(context.Context, *ChatLogRequest) (*ChatLogs, error)
 	mustEmbedUnimplementedChatServiceServer()
 }
 
@@ -284,6 +297,9 @@ func (UnimplementedChatServiceServer) UpdateCharacterChatChannelAuth(context.Con
 }
 func (UnimplementedChatServiceServer) BanCharacterFromChatChannel(context.Context, *BanRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BanCharacterFromChatChannel not implemented")
+}
+func (UnimplementedChatServiceServer) GetChatLogs(context.Context, *ChatLogRequest) (*ChatLogs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetChatLogs not implemented")
 }
 func (UnimplementedChatServiceServer) mustEmbedUnimplementedChatServiceServer() {}
 func (UnimplementedChatServiceServer) testEmbeddedByValue()                     {}
@@ -526,6 +542,24 @@ func _ChatService_BanCharacterFromChatChannel_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ChatService_GetChatLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChatServiceServer).GetChatLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ChatService_GetChatLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChatServiceServer).GetChatLogs(ctx, req.(*ChatLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ChatService_ServiceDesc is the grpc.ServiceDesc for ChatService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -576,6 +610,10 @@ var ChatService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BanCharacterFromChatChannel",
 			Handler:    _ChatService_BanCharacterFromChatChannel_Handler,
+		},
+		{
+			MethodName: "GetChatLogs",
+			Handler:    _ChatService_GetChatLogs_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

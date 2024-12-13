@@ -8,7 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type ChatHistoryRepository interface {
+// TODO: Think about implementing GetMessageCount, that takes the same arguments as
+// GetMessages, except limit and offset, and returns the count of messages
+// that would be returned by GetMessages.
+
+type ChatLogRepository interface {
 	AddMessage(
 		ctx context.Context,
 		channelId *uuid.UUID,
@@ -20,11 +24,11 @@ type ChatHistoryRepository interface {
 	// chat channel or a character
 	GetMessages(
 		ctx context.Context,
-		channelId string,
-		limit *int,
-		offset *int,
+		channelId *uuid.UUID,
+		limit *uint,
+		offset *uint,
 		before *time.Time,
 		after *time.Time,
-		sender *string,
-	) (msgs *chat.Messages, maxOffset int, err error)
+		sender *uuid.UUID,
+	) (msgs *chat.MessageLogs, total uint, err error)
 }

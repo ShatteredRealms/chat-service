@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	chat "github.com/ShatteredRealms/chat-service/pkg/model/chat"
+	repository "github.com/ShatteredRealms/chat-service/pkg/repository"
 	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -114,4 +115,19 @@ func (m *MockChatChannelRepository) Save(ctx context.Context, channel *chat.Chan
 func (mr *MockChatChannelRepositoryMockRecorder) Save(ctx, channel any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockChatChannelRepository)(nil).Save), ctx, channel)
+}
+
+// Update mocks base method.
+func (m *MockChatChannelRepository) Update(ctx context.Context, request *repository.UpdateRequest) (*chat.Channel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, request)
+	ret0, _ := ret[0].(*chat.Channel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockChatChannelRepositoryMockRecorder) Update(ctx, request any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockChatChannelRepository)(nil).Update), ctx, request)
 }

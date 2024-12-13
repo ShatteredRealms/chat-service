@@ -224,6 +224,26 @@ func (mr *MockChatServiceClientMockRecorder) GetChatChannels(ctx, in any, opts .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatChannels", reflect.TypeOf((*MockChatServiceClient)(nil).GetChatChannels), varargs...)
 }
 
+// GetChatLogs mocks base method.
+func (m *MockChatServiceClient) GetChatLogs(ctx context.Context, in *pb.ChatLogRequest, opts ...grpc.CallOption) (*pb.ChatLogs, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetChatLogs", varargs...)
+	ret0, _ := ret[0].(*pb.ChatLogs)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetChatLogs indicates an expected call of GetChatLogs.
+func (mr *MockChatServiceClientMockRecorder) GetChatLogs(ctx, in any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatLogs", reflect.TypeOf((*MockChatServiceClient)(nil).GetChatLogs), varargs...)
+}
+
 // SendChatChannelMessage mocks base method.
 func (m *MockChatServiceClient) SendChatChannelMessage(ctx context.Context, in *pb.SendChatChannelMessageRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
@@ -459,6 +479,21 @@ func (m *MockChatServiceServer) GetChatChannels(arg0 context.Context, arg1 *empt
 func (mr *MockChatServiceServerMockRecorder) GetChatChannels(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatChannels", reflect.TypeOf((*MockChatServiceServer)(nil).GetChatChannels), arg0, arg1)
+}
+
+// GetChatLogs mocks base method.
+func (m *MockChatServiceServer) GetChatLogs(arg0 context.Context, arg1 *pb.ChatLogRequest) (*pb.ChatLogs, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetChatLogs", arg0, arg1)
+	ret0, _ := ret[0].(*pb.ChatLogs)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetChatLogs indicates an expected call of GetChatLogs.
+func (mr *MockChatServiceServerMockRecorder) GetChatLogs(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChatLogs", reflect.TypeOf((*MockChatServiceServer)(nil).GetChatLogs), arg0, arg1)
 }
 
 // SendChatChannelMessage mocks base method.

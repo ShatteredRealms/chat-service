@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	chat "github.com/ShatteredRealms/chat-service/pkg/model/chat"
-	uuid "github.com/google/uuid"
+	pb "github.com/ShatteredRealms/chat-service/pkg/pb"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -58,7 +58,7 @@ func (mr *MockChatChannelServiceMockRecorder) Create(ctx, name, dimensionId any)
 }
 
 // Delete mocks base method.
-func (m *MockChatChannelService) Delete(ctx context.Context, channelId *uuid.UUID) error {
+func (m *MockChatChannelService) Delete(ctx context.Context, channelId string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, channelId)
 	ret0, _ := ret[0].(error)
@@ -87,7 +87,7 @@ func (mr *MockChatChannelServiceMockRecorder) GetAll(ctx any) *gomock.Call {
 }
 
 // GetById mocks base method.
-func (m *MockChatChannelService) GetById(ctx context.Context, id *uuid.UUID) (*chat.Channel, error) {
+func (m *MockChatChannelService) GetById(ctx context.Context, id string) (*chat.Channel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetById", ctx, id)
 	ret0, _ := ret[0].(*chat.Channel)
@@ -114,4 +114,19 @@ func (m *MockChatChannelService) Save(ctx context.Context, channel *chat.Channel
 func (mr *MockChatChannelServiceMockRecorder) Save(ctx, channel any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Save", reflect.TypeOf((*MockChatChannelService)(nil).Save), ctx, channel)
+}
+
+// Update mocks base method.
+func (m *MockChatChannelService) Update(ctx context.Context, pbRequest *pb.UpdateChatChannelRequest) (*chat.Channel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", ctx, pbRequest)
+	ret0, _ := ret[0].(*chat.Channel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockChatChannelServiceMockRecorder) Update(ctx, pbRequest any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockChatChannelService)(nil).Update), ctx, pbRequest)
 }
