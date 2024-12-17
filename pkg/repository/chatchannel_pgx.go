@@ -57,7 +57,9 @@ func (p *chatChannelPgxRepository) Delete(ctx context.Context, channelId *uuid.U
 		return err
 	}
 
-	ct, err := tx.Exec(ctx, "DELETE FROM chat_channels WHERE id = $1", channelId)
+	ct, err := tx.Exec(ctx,
+		"UPDATE chat_channels SET deleted = true WHERE id = $1",
+		channelId)
 	if err != nil {
 		return err
 	}
