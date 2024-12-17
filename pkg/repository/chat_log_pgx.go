@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
+	"github.com/ShatteredRealms/go-common-service/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -16,9 +17,9 @@ type chatLogPgxRepository struct {
 	conn *pgxpool.Pool
 }
 
-func NewChatLogPgxRepository(migrater *PgxMigrater) ChatLogRepository {
+func NewChatLogPgxRepository(migrater *repository.PgxMigrater) ChatLogRepository {
 	return &chatLogPgxRepository{
-		conn: migrater.conn,
+		conn: migrater.Conn,
 	}
 }
 

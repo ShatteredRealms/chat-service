@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
+	"github.com/ShatteredRealms/go-common-service/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -14,9 +15,9 @@ type ccpPgxRepo struct {
 	conn *pgxpool.Pool
 }
 
-func NewChatChannelPermissionPgxRepository(migrater *PgxMigrater) ChatChannelPermissionRepository {
+func NewChatChannelPermissionPgxRepository(migrater *repository.PgxMigrater) ChatChannelPermissionRepository {
 	return &ccpPgxRepo{
-		conn: migrater.conn,
+		conn: migrater.Conn,
 	}
 }
 

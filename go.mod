@@ -3,7 +3,7 @@ module github.com/ShatteredRealms/chat-service
 go 1.23.3
 
 require (
-	github.com/ShatteredRealms/go-common-service v0.9.3
+	github.com/ShatteredRealms/go-common-service v0.9.5
 	github.com/WilSimpson/gocloak/v13 v13.11.2
 	github.com/go-faker/faker/v4 v4.5.0
 	github.com/google/uuid v1.6.0
@@ -260,7 +260,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/exp v0.0.0-20241215155358-4a5509556b9e // indirect
+	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.32.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect

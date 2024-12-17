@@ -5,9 +5,9 @@ import (
 	"encoding/gob"
 	"testing"
 
-	"github.com/ShatteredRealms/chat-service/pkg/repository"
 	"github.com/ShatteredRealms/go-common-service/pkg/config"
 	"github.com/ShatteredRealms/go-common-service/pkg/log"
+	crepository "github.com/ShatteredRealms/go-common-service/pkg/repository"
 	"github.com/ShatteredRealms/go-common-service/pkg/testsro"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -24,7 +24,7 @@ var (
 	pgCloseFunc func() error
 
 	pgUrl    string
-	migrater *repository.PgxMigrater
+	migrater *crepository.PgxMigrater
 )
 
 func TestRepository(t *testing.T) {
@@ -66,7 +66,7 @@ func TestRepository(t *testing.T) {
 		pgUrl = data.PgUrl
 
 		var err error
-		migrater, err = repository.NewPgxMigrater(ctx, pgUrl, "../../migrations")
+		migrater, err = crepository.NewPgxMigrater(ctx, pgUrl, "../../migrations")
 		Expect(err).NotTo(HaveOccurred())
 	})
 

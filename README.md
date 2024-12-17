@@ -21,8 +21,6 @@ make protos
 ```
 
 ## Migrations
-:exclamation: **Note: Migrations are only required when using a pgx repository.** :exclamation:
-
 Any changes to the underlying database schema should be reflected with a migration file in the migrations folder. The following command will generate a new migration file.
 ```bash
 migrate create -ext sql -dir migrations
