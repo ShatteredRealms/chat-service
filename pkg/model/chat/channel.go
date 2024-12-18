@@ -11,16 +11,16 @@ import (
 // Channel represents a chat channel. If the dimension ID is not empty, the channel is a dimension channel.
 // Otherwise, the channel is a global channel for all dimensions.
 type Channel struct {
-	Id        uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid()" db:"id"`
-	CreatedAt time.Time  `db:"created_at"`
-	UpdatedAt time.Time  `db:"updated_at"`
-	DeletedAt *time.Time `gorm:"uniqueIndex:idx_deleted" db:"deleted_at"`
-	Name      string     `gorm:"uniqueIndex:idx_channel" json:"name" db:"name"`
+	Id        uuid.UUID  `db:"id" json:"id"`
+	CreatedAt time.Time  `db:"created_at" json:"createdAt"`
+	UpdatedAt time.Time  `db:"updated_at" json:"updatedAt"`
+	DeletedAt *time.Time `db:"deleted_at" json:"deletedAt"`
+	Name      string     `db:"name" json:"name"`
 
 	// DimensionId is the dimension ID for the channel.
 	// If the dimension ID is not empty, the channel is a dimension channel.
 	// Otherwise, the dimension ID is empty, and the channel is a global channel for all dimensions.
-	DimensionId *uuid.UUID `gorm:"uniqueIndex:idx_channel" json:"dimensionId" db:"dimension_id"`
+	DimensionId *uuid.UUID `db:"dimension_id" json:"dimensionId"`
 }
 type Channels []*Channel
 
