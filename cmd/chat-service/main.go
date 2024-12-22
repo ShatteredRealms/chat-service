@@ -81,6 +81,11 @@ func main() {
 		},
 		map[bus.BusMessageType]commonsrv.WriterResetCallback{},
 	)
+	if err != nil {
+		log.Logger.WithContext(ctx).Errorf("create bus service: %v", err)
+		return
+	}
+
 	commonpb.RegisterBusServiceServer(grpcServer, busService)
 	err = commonpb.RegisterBusServiceHandlerFromEndpoint(ctx, gwmux, cfg.Server.Address(), opts)
 	if err != nil {
