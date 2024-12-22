@@ -13,7 +13,7 @@ var (
 )
 
 type ChatConfig struct {
-	cconfig.BaseConfig    `yaml:",inline" chatstructure:",squash"`
+	cconfig.BaseConfig    `yaml:",inline" mapstructure:",squash"`
 	Postgres              cconfig.DBConfig     `yaml:"postgres"`
 	Redis                 cconfig.DBPoolConfig `yaml:"redis"`
 	PostgresMigrationPath string               `yaml:"postgres_migration_path"`
