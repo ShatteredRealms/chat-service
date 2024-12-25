@@ -171,13 +171,16 @@ func (s *chatServiceServer) CreateChatChannel(ctx context.Context, request *pb.C
 		return nil, err
 	}
 
-	dimension, err := s.Context.DimensionService.GetDimensionById(ctx, request.DimensionId)
-	if err != nil {
-		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrDimensionLookup, err)
-		return nil, status.Error(codes.Internal, ErrDimensionLookup.Error())
-	}
-	if dimension == nil {
-		return nil, status.Error(codes.InvalidArgument, ErrDimensionNotExist.Error())
+	if request.DimensionId != "" {
+		log.Logger.WithContext(ctx).Debugf("checking dimension '%s'", request.DimensionId)
+		dimension, err := s.Context.DimensionService.GetDimensionById(ctx, request.DimensionId)
+		if err != nil {
+			log.Logger.WithContext(ctx).Errorf("%v: %v", ErrDimensionLookup, err)
+			return nil, status.Error(codes.Internal, ErrDimensionLookup.Error())
+		}
+		if dimension == nil {
+			return nil, status.Error(codes.InvalidArgument, ErrDimensionNotExist.Error())
+		}
 	}
 
 	chatChannel, err := s.Context.ChatChannelService.Create(ctx, request.Name, request.DimensionId)
@@ -215,7 +218,7 @@ func (s *chatServiceServer) EditChatChannel(ctx context.Context, request *pb.Upd
 	updatedChannel, err := s.Context.ChatChannelService.Update(ctx, request)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatEdit, err)
-		return nil, status.Errorf(codes.InvalidArgument, ErrChatEdit.Error())
+		return nil, status.Error(codes.InvalidArgument, ErrChatEdit.Error())
 	}
 
 	return updatedChannel.ToPb(), nil

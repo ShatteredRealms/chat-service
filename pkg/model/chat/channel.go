@@ -25,11 +25,15 @@ type Channel struct {
 type Channels []*Channel
 
 func (c *Channel) ToPb() *pb.ChatChannel {
-	return &pb.ChatChannel{
-		Id:          c.Id.String(),
-		Name:        c.Name,
-		DimensionId: c.DimensionId.String(),
+	out := &pb.ChatChannel{
+		Id:   c.Id.String(),
+		Name: c.Name,
 	}
+	if c.DimensionId != nil {
+		out.DimensionId = c.DimensionId.String()
+	}
+
+	return out
 }
 
 func (c Channels) ToPb() *pb.ChatChannels {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
+	"github.com/ShatteredRealms/go-common-service/pkg/log"
 	"github.com/ShatteredRealms/go-common-service/pkg/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -171,7 +172,12 @@ func (p *chatChannelPgxRepository) Update(ctx context.Context, request *UpdateRe
 		updates["name"] = *request.Name
 	}
 	if request.DimensionId != nil {
-		updates["dimension_id"] = *request.DimensionId
+		if *request.DimensionId == "" || *request.DimensionId == "null" {
+			updates["dimension_id"] = nil
+			log.Logger.Infof("dimension_id: %s", updates["dimension_id"])
+		} else {
+			updates["dimension_id"] = *request.DimensionId
+		}
 	}
 
 	if len(updates) == 0 {
@@ -179,25 +185,28 @@ func (p *chatChannelPgxRepository) Update(ctx context.Context, request *UpdateRe
 	}
 
 	builder := strings.Builder{}
-	builder.WriteString("UPDATE chat_channels SET updated_at = $2")
-	vals := make([]any, 0, len(updates)+2)
+	builder.WriteString("UPDATE chat_channels SET ")
+	vals := make([]any, 0, len(updates)+1)
 	vals = append(vals, request.ChannelId)
-	vals = append(vals, time.Now().UTC())
-	argNum := 3
+	argNum := 2
 	for column, value := range updates {
-		builder.WriteString(fmt.Sprintf(", %s = $%d", column, argNum))
+		builder.WriteString(fmt.Sprintf("%s = $%d", column, argNum))
+		if argNum < len(updates)+1 {
+			builder.WriteString(", ")
+		}
 		argNum++
 		vals = append(vals, value)
 	}
-	builder.WriteString(" WHERE id = $1")
+	builder.WriteString(" WHERE id = $1 RETURNING *")
+	log.Logger.Infof("builder: %s", builder.String())
+	log.Logger.Infof("vals: %s", vals)
 
-	ct, err := tx.Exec(ctx, builder.String(), vals...)
-	if ct.RowsAffected() == 0 {
-		return nil, ErrDoesNotExist
-	}
-
-	outChannel, err := p.queryById(ctx, tx, request.ChannelId)
+	rows, _ := tx.Query(ctx, builder.String(), vals...)
+	outChannel, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[chat.Channel])
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrDoesNotExist
+		}
 		return nil, err
 	}
 
