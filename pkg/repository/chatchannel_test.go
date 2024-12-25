@@ -59,8 +59,9 @@ var _ = Describe("ChatChannel Repository", func() {
 
 			It("should create a new chat channel if name and dimension combo existed but was deleted", func(ctx SpecContext) {
 				createdChannel, outErr = pgRepo.Create(ctx, channel)
-				err := pgRepo.Delete(ctx, &createdChannel.Id)
+				channel, err := pgRepo.Delete(ctx, &createdChannel.Id)
 				Expect(err).NotTo(HaveOccurred())
+				Expect(channel).NotTo(BeNil())
 				createdChannel, outErr = pgRepo.Create(ctx, channel)
 			})
 
@@ -126,8 +127,9 @@ var _ = Describe("ChatChannel Repository", func() {
 				Expect(channel).NotTo(BeNil())
 
 				if i%2 == 0 {
-					err = pgRepo.Delete(ctx, &channel.Id)
+					channel, err = pgRepo.Delete(ctx, &channel.Id)
 					Expect(err).NotTo(HaveOccurred())
+					Expect(channel).NotTo(BeNil())
 				}
 			}
 
@@ -155,22 +157,25 @@ var _ = Describe("ChatChannel Repository", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("should delete the channel", func(ctx SpecContext) {
-			err := pgRepo.Delete(ctx, &channel.Id)
+			channel, err := pgRepo.Delete(ctx, &channel.Id)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(channel).NotTo(BeNil())
 
 			outChannel, err := pgRepo.GetById(ctx, &channel.Id)
 			Expect(err).To(Equal(pgx.ErrNoRows))
 			Expect(outChannel).To(BeNil())
 		})
 		It("should err if the channel ID is nil", func(ctx SpecContext) {
-			err := pgRepo.Delete(ctx, nil)
+			channel, err := pgRepo.Delete(ctx, nil)
 			Expect(err).To(Equal(repository.ErrDoesNotExist))
+			Expect(channel).To(BeNil())
 		})
 		It("should return an error if the channel does not exist", func(ctx SpecContext) {
 			uuid, err := uuid.NewV7()
 			Expect(err).NotTo(HaveOccurred())
-			err = pgRepo.Delete(ctx, &uuid)
+			channel, err = pgRepo.Delete(ctx, &uuid)
 			Expect(err).To(Equal(repository.ErrDoesNotExist))
+			Expect(channel).To(BeNil())
 		})
 	})
 

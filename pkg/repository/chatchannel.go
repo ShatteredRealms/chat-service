@@ -20,5 +20,5 @@ type ChatChannelRepository interface {
 	Create(ctx context.Context, channel *chat.Channel) (*chat.Channel, error)
 	Save(ctx context.Context, channel *chat.Channel) (*chat.Channel, error)
 	Update(ctx context.Context, request *UpdateRequest) (*chat.Channel, error)
-	Delete(ctx context.Context, channelId *uuid.UUID) error
+	Delete(ctx context.Context, channelId *uuid.UUID) (*chat.Channel, error)
 }

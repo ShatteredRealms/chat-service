@@ -48,9 +48,9 @@ type ChatServiceClient interface {
 	// TODO: Have request allow for filtering
 	GetChatChannels(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ChatChannels, error)
 	GetChatChannel(ctx context.Context, in *pb.TargetId, opts ...grpc.CallOption) (*ChatChannel, error)
-	CreateChatChannel(ctx context.Context, in *CreateChatChannelMessage, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	DeleteChatChannel(ctx context.Context, in *pb.TargetId, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	EditChatChannel(ctx context.Context, in *UpdateChatChannelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateChatChannel(ctx context.Context, in *CreateChatChannelMessage, opts ...grpc.CallOption) (*ChatChannel, error)
+	DeleteChatChannel(ctx context.Context, in *pb.TargetId, opts ...grpc.CallOption) (*ChatChannel, error)
+	EditChatChannel(ctx context.Context, in *UpdateChatChannelRequest, opts ...grpc.CallOption) (*ChatChannel, error)
 	GetAuthorizedChatChannels(ctx context.Context, in *pb.TargetId, opts ...grpc.CallOption) (*ChatChannels, error)
 	// Sets the character chat channels to the given list of channels
 	SetCharacterChatChannelAuth(ctx context.Context, in *RequestSetCharacterSetChatChannelAuth, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -147,9 +147,9 @@ func (c *chatServiceClient) GetChatChannel(ctx context.Context, in *pb.TargetId,
 	return out, nil
 }
 
-func (c *chatServiceClient) CreateChatChannel(ctx context.Context, in *CreateChatChannelMessage, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *chatServiceClient) CreateChatChannel(ctx context.Context, in *CreateChatChannelMessage, opts ...grpc.CallOption) (*ChatChannel, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(ChatChannel)
 	err := c.cc.Invoke(ctx, ChatService_CreateChatChannel_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -157,9 +157,9 @@ func (c *chatServiceClient) CreateChatChannel(ctx context.Context, in *CreateCha
 	return out, nil
 }
 
-func (c *chatServiceClient) DeleteChatChannel(ctx context.Context, in *pb.TargetId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *chatServiceClient) DeleteChatChannel(ctx context.Context, in *pb.TargetId, opts ...grpc.CallOption) (*ChatChannel, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(ChatChannel)
 	err := c.cc.Invoke(ctx, ChatService_DeleteChatChannel_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -167,9 +167,9 @@ func (c *chatServiceClient) DeleteChatChannel(ctx context.Context, in *pb.Target
 	return out, nil
 }
 
-func (c *chatServiceClient) EditChatChannel(ctx context.Context, in *UpdateChatChannelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *chatServiceClient) EditChatChannel(ctx context.Context, in *UpdateChatChannelRequest, opts ...grpc.CallOption) (*ChatChannel, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(emptypb.Empty)
+	out := new(ChatChannel)
 	err := c.cc.Invoke(ctx, ChatService_EditChatChannel_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -238,9 +238,9 @@ type ChatServiceServer interface {
 	// TODO: Have request allow for filtering
 	GetChatChannels(context.Context, *emptypb.Empty) (*ChatChannels, error)
 	GetChatChannel(context.Context, *pb.TargetId) (*ChatChannel, error)
-	CreateChatChannel(context.Context, *CreateChatChannelMessage) (*emptypb.Empty, error)
-	DeleteChatChannel(context.Context, *pb.TargetId) (*emptypb.Empty, error)
-	EditChatChannel(context.Context, *UpdateChatChannelRequest) (*emptypb.Empty, error)
+	CreateChatChannel(context.Context, *CreateChatChannelMessage) (*ChatChannel, error)
+	DeleteChatChannel(context.Context, *pb.TargetId) (*ChatChannel, error)
+	EditChatChannel(context.Context, *UpdateChatChannelRequest) (*ChatChannel, error)
 	GetAuthorizedChatChannels(context.Context, *pb.TargetId) (*ChatChannels, error)
 	// Sets the character chat channels to the given list of channels
 	SetCharacterChatChannelAuth(context.Context, *RequestSetCharacterSetChatChannelAuth) (*emptypb.Empty, error)
@@ -277,13 +277,13 @@ func (UnimplementedChatServiceServer) GetChatChannels(context.Context, *emptypb.
 func (UnimplementedChatServiceServer) GetChatChannel(context.Context, *pb.TargetId) (*ChatChannel, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetChatChannel not implemented")
 }
-func (UnimplementedChatServiceServer) CreateChatChannel(context.Context, *CreateChatChannelMessage) (*emptypb.Empty, error) {
+func (UnimplementedChatServiceServer) CreateChatChannel(context.Context, *CreateChatChannelMessage) (*ChatChannel, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateChatChannel not implemented")
 }
-func (UnimplementedChatServiceServer) DeleteChatChannel(context.Context, *pb.TargetId) (*emptypb.Empty, error) {
+func (UnimplementedChatServiceServer) DeleteChatChannel(context.Context, *pb.TargetId) (*ChatChannel, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteChatChannel not implemented")
 }
-func (UnimplementedChatServiceServer) EditChatChannel(context.Context, *UpdateChatChannelRequest) (*emptypb.Empty, error) {
+func (UnimplementedChatServiceServer) EditChatChannel(context.Context, *UpdateChatChannelRequest) (*ChatChannel, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EditChatChannel not implemented")
 }
 func (UnimplementedChatServiceServer) GetAuthorizedChatChannels(context.Context, *pb.TargetId) (*ChatChannels, error) {

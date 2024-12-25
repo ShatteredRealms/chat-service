@@ -16,7 +16,7 @@ type ChatChannelService interface {
 	Create(ctx context.Context, name string, dimensionId string) (*chat.Channel, error)
 	Save(ctx context.Context, channel *chat.Channel) (*chat.Channel, error)
 	Update(ctx context.Context, pbRequest *pb.UpdateChatChannelRequest) (*chat.Channel, error)
-	Delete(ctx context.Context, channelId string) error
+	Delete(ctx context.Context, channelId string) (*chat.Channel, error)
 }
 
 type chatChannelService struct {
@@ -71,10 +71,10 @@ func (c *chatChannelService) Create(ctx context.Context, name string, dimensionI
 }
 
 // Delete implements ChatChannelService.
-func (c *chatChannelService) Delete(ctx context.Context, channelId string) error {
+func (c *chatChannelService) Delete(ctx context.Context, channelId string) (*chat.Channel, error) {
 	id, err := uuid.Parse(channelId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	return c.repo.Delete(ctx, &id)

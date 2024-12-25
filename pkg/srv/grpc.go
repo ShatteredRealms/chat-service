@@ -165,7 +165,7 @@ func (s *chatServiceServer) ConnectDirectMessages(request *commonpb.TargetId, se
 }
 
 // CreateChatChannel implements pb.ChatServiceServer.
-func (s *chatServiceServer) CreateChatChannel(ctx context.Context, request *pb.CreateChatChannelMessage) (*emptypb.Empty, error) {
+func (s *chatServiceServer) CreateChatChannel(ctx context.Context, request *pb.CreateChatChannelMessage) (*pb.ChatChannel, error) {
 	_, err := s.validateRole(ctx, RoleChatManagement)
 	if err != nil {
 		return nil, err
@@ -180,45 +180,45 @@ func (s *chatServiceServer) CreateChatChannel(ctx context.Context, request *pb.C
 		return nil, status.Error(codes.InvalidArgument, ErrDimensionNotExist.Error())
 	}
 
-	_, err = s.Context.ChatChannelService.Create(ctx, request.Name, request.DimensionId)
+	chatChannel, err := s.Context.ChatChannelService.Create(ctx, request.Name, request.DimensionId)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatCreate, err)
 		return nil, ErrChatCreate
 	}
 
-	return &emptypb.Empty{}, nil
+	return chatChannel.ToPb(), nil
 }
 
 // DeleteChatChannel implements pb.ChatServiceServer.
-func (s *chatServiceServer) DeleteChatChannel(ctx context.Context, request *commonpb.TargetId) (*emptypb.Empty, error) {
+func (s *chatServiceServer) DeleteChatChannel(ctx context.Context, request *commonpb.TargetId) (*pb.ChatChannel, error) {
 	_, err := s.validateRole(ctx, RoleChatManagement)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.Context.ChatChannelService.Delete(ctx, request.Id)
+	deletedChannel, err := s.Context.ChatChannelService.Delete(ctx, request.Id)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatDelete, err)
 		return nil, ErrChatDelete
 	}
 
-	return &emptypb.Empty{}, nil
+	return deletedChannel.ToPb(), nil
 }
 
 // EditChatChannel implements pb.ChatServiceServer.
-func (s *chatServiceServer) EditChatChannel(ctx context.Context, request *pb.UpdateChatChannelRequest) (*emptypb.Empty, error) {
+func (s *chatServiceServer) EditChatChannel(ctx context.Context, request *pb.UpdateChatChannelRequest) (*pb.ChatChannel, error) {
 	_, err := s.validateRole(ctx, RoleChatManagement)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = s.Context.ChatChannelService.Update(ctx, request)
+	updatedChannel, err := s.Context.ChatChannelService.Update(ctx, request)
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatEdit, err)
 		return nil, status.Errorf(codes.InvalidArgument, ErrChatEdit.Error())
 	}
 
-	return &emptypb.Empty{}, nil
+	return updatedChannel.ToPb(), nil
 }
 
 // GetAuthorizedChatChannels implements pb.ChatServiceServer.
@@ -309,7 +309,7 @@ func (s *chatServiceServer) SendChatChannelMessage(ctx context.Context, request 
 
 	if err != nil {
 		log.Logger.WithContext(ctx).Errorf("error sending message: %v", err)
-		return nil, status.Errorf(codes.Internal, ErrChatSend.Error())
+		return nil, status.Error(codes.Internal, ErrChatSend.Error())
 	}
 
 	go func() {

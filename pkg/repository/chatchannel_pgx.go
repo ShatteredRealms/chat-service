@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -50,30 +51,30 @@ func (p *chatChannelPgxRepository) Create(ctx context.Context, channel *chat.Cha
 }
 
 // Delete implements ChatChannelRepository.
-func (p *chatChannelPgxRepository) Delete(ctx context.Context, channelId *uuid.UUID) error {
+func (p *chatChannelPgxRepository) Delete(ctx context.Context, channelId *uuid.UUID) (*chat.Channel, error) {
+	if channelId == nil {
+		return nil, ErrNilId
+	}
+
 	tx, err := p.conn.Begin(ctx)
 	defer tx.Rollback(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ct, err := tx.Exec(ctx,
-		"UPDATE chat_channels SET deleted = true WHERE id = $1",
+	rows, _ := tx.Query(ctx,
+		"UPDATE chat_channels SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *",
 		channelId)
+	outChannel, err := pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[chat.Channel])
 	if err != nil {
-		return err
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	if ct.RowsAffected() == 0 {
-		return ErrDoesNotExist
-	}
+	return outChannel, tx.Commit(ctx)
 
-	err = tx.Commit(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // GetAll implements ChatChannelRepository.

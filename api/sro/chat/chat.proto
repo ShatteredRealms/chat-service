@@ -49,22 +49,20 @@ service ChatService {
     };
   }
 
-  rpc CreateChatChannel(CreateChatChannelMessage)
-      returns (google.protobuf.Empty) {
+  rpc CreateChatChannel(CreateChatChannelMessage) returns (ChatChannel) {
     option (google.api.http) = {
       post : "/v1/channels"
       body : "*"
     };
   }
 
-  rpc DeleteChatChannel(sro.TargetId) returns (google.protobuf.Empty) {
+  rpc DeleteChatChannel(sro.TargetId) returns (ChatChannel) {
     option (google.api.http) = {
       delete : "/v1/channels/id/{id}"
     };
   }
 
-  rpc EditChatChannel(UpdateChatChannelRequest)
-      returns (google.protobuf.Empty) {
+  rpc EditChatChannel(UpdateChatChannelRequest) returns (ChatChannel) {
     option (google.api.http) = {
       put : "/v1/channels/id/{channel_id}"
       body : "*"
