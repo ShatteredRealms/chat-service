@@ -201,9 +201,10 @@ func (s *chatService) getReader(channelId, receiverId *uuid.UUID, topic string) 
 	if !ok {
 		reader = kafka.NewReader(kafka.ReaderConfig{
 			Brokers: s.kafkaBrokers,
-			GroupID: channelId.String(),
-			Topic:   topic,
-			Logger:  kafka.LoggerFunc(log.Logger.Tracef),
+			// GroupID: channelId.String(),
+			Topic:       topic,
+			Logger:      kafka.LoggerFunc(log.Logger.Tracef),
+			StartOffset: kafka.LastOffset,
 		})
 		if _, ok := s.readers[*channelId]; !ok {
 			s.readers[*channelId] = make(map[uuid.UUID]*kafka.Reader)
