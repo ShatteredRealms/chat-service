@@ -144,6 +144,11 @@
           },
           "senderCharacterId": {
             "type": "string"
+          },
+          "sentTimeMs": {
+            "format": "int64",
+            "type": "integer",
+            "x-kubernetes-int-or-string": true
           }
         },
         "type": "object"
@@ -213,6 +218,11 @@
               },
               "senderCharacterId": {
                 "type": "string"
+              },
+              "sentTimeMs": {
+                "format": "int64",
+                "type": "integer",
+                "x-kubernetes-int-or-string": true
               }
             },
             "type": "object"
@@ -232,6 +242,11 @@
               },
               "senderCharacterId": {
                 "type": "string"
+              },
+              "sentTimeMs": {
+                "format": "int64",
+                "type": "integer",
+                "x-kubernetes-int-or-string": true
               }
             },
             "type": "object"

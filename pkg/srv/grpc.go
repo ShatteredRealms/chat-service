@@ -113,10 +113,7 @@ func (s *chatServiceServer) ConnectChatChannel(request *pb.ConnectChatChannelReq
 			if !ok {
 				return fmt.Errorf("receiver shutdown")
 			}
-			err = server.Send(&pb.ChatMessage{
-				SenderCharacterId: msg.SenderCharacterId,
-				Content:           msg.Content,
-			})
+			err = server.Send(msg.ToPb())
 			if err != nil {
 				log.Logger.WithContext(server.Context()).
 					Errorf("error sending chat message on channel '%s' for character '%s': %v",
@@ -150,10 +147,7 @@ func (s *chatServiceServer) ConnectDirectMessages(request *commonpb.TargetId, se
 			if !ok {
 				return fmt.Errorf("receiver shutdown")
 			}
-			err = server.Send(&pb.ChatMessage{
-				SenderCharacterId: msg.SenderCharacterId,
-				Content:           msg.Content,
-			})
+			err = server.Send(msg.ToPb())
 			if err != nil {
 				log.Logger.WithContext(server.Context()).
 					Errorf("sending grpc message for character '%s' by '%s': %v",
@@ -304,10 +298,9 @@ func (s *chatServiceServer) SendChatChannelMessage(ctx context.Context, request 
 	if dimensionId == nil {
 		dimensionId = &character.DimensionId
 	}
-	msg := &chat.Message{
-		SenderCharacterId: request.ChatMessage.SenderCharacterId,
-		Content:           request.ChatMessage.Content,
-	}
+
+	msg := chat.NewMessage(ctx, request.ChatMessage.SenderCharacterId, request.ChatMessage.Content)
+
 	err = s.Context.ChatService.SendChannelMessage(ctx, &channel.Id, dimensionId, msg)
 
 	if err != nil {
@@ -350,16 +343,14 @@ func (s *chatServiceServer) SendDirectMessage(
 		return nil, status.Errorf(codes.NotFound, "character not found")
 	}
 
-	msg := &chat.Message{
-		SenderCharacterId: request.ChatMessage.SenderCharacterId,
-		Content:           request.ChatMessage.Content,
-	}
+	msg := chat.NewMessage(ctx, request.ChatMessage.SenderCharacterId, request.ChatMessage.Content)
+
 	err = s.Context.ChatService.SendDirectMessage(ctx, &targetCharacter.Id, msg)
 	if err != nil {
 		log.Logger.WithContext(ctx).
 			Errorf("%v: sending direct message from '%s' to '%s': %v",
 				ErrChatSend.Error(), request.ChatMessage.SenderCharacterId, request.CharacterId, err)
-		return nil, status.Errorf(codes.Internal, ErrChatSend.Error())
+		return nil, status.Error(codes.Internal, ErrChatSend.Error())
 	}
 
 	go func() {

@@ -58,11 +58,12 @@ func (mr *MockChatChannelServiceMockRecorder) Create(ctx, name, dimensionId any)
 }
 
 // Delete mocks base method.
-func (m *MockChatChannelService) Delete(ctx context.Context, channelId string) error {
+func (m *MockChatChannelService) Delete(ctx context.Context, channelId string) (*chat.Channel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", ctx, channelId)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*chat.Channel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Delete indicates an expected call of Delete.
