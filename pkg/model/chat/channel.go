@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/pb"
+	"github.com/ShatteredRealms/go-common-service/pkg/log"
 	"github.com/google/uuid"
 )
 
@@ -21,13 +22,18 @@ type Channel struct {
 	// If the dimension ID is not empty, the channel is a dimension channel.
 	// Otherwise, the dimension ID is empty, and the channel is a global channel for all dimensions.
 	DimensionId *uuid.UUID `db:"dimension_id" json:"dimensionId"`
+
+	// Public is true if the channel does not require a permission to join.
+	Public bool `db:"public" json:"public"`
 }
 type Channels []*Channel
 
 func (c *Channel) ToPb() *pb.ChatChannel {
+	log.Logger.Infof("Updating chat channel with request: %+v", *c)
 	out := &pb.ChatChannel{
-		Id:   c.Id.String(),
-		Name: c.Name,
+		Id:     c.Id.String(),
+		Name:   c.Name,
+		Public: c.Public,
 	}
 	if c.DimensionId != nil {
 		out.DimensionId = c.DimensionId.String()

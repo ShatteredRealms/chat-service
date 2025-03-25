@@ -29,6 +29,9 @@
           },
           "name": {
             "type": "string"
+          },
+          "public": {
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -46,6 +49,9 @@
                 },
                 "name": {
                   "type": "string"
+                },
+                "public": {
+                  "type": "boolean"
                 }
               },
               "type": "object"
@@ -264,6 +270,9 @@
           },
           "name": {
             "type": "string"
+          },
+          "public": {
+            "type": "boolean"
           }
         },
         "type": "object"

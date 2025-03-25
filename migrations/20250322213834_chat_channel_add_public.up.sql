@@ -1,0 +1,2 @@
+ALTER TABLE chat_channels
+ADD COLUMN public BOOLEAN DEFAULT FALSE;

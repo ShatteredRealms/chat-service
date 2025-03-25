@@ -41,6 +41,10 @@ func (c *chatChannelService) Update(ctx context.Context, pbRequest *pb.UpdateCha
 		dimensionId := pbRequest.GetDimension()
 		request.DimensionId = &dimensionId
 	}
+	if pbRequest.OptionalPublic != nil {
+		public := pbRequest.GetPublic()
+		request.Public = &public
+	}
 
 	return c.repo.Update(ctx, request)
 }

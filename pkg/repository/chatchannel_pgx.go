@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/ShatteredRealms/chat-service/pkg/model/chat"
 	"github.com/ShatteredRealms/go-common-service/pkg/log"
@@ -33,7 +32,7 @@ func (p *chatChannelPgxRepository) Create(ctx context.Context, channel *chat.Cha
 		return nil, err
 	}
 
-	rows, err := tx.Query(ctx, "INSERT INTO chat_channels (name, dimension_id) VALUES ($1, $2) RETURNING *", channel.Name, channel.DimensionId)
+	rows, err := tx.Query(ctx, "INSERT INTO chat_channels (name, dimension_id, public) VALUES ($1, $2, $3) RETURNING *", channel.Name, channel.DimensionId, channel.Public)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +85,7 @@ func (p *chatChannelPgxRepository) GetAll(ctx context.Context) (*chat.Channels, 
 		return nil, err
 	}
 
-	rows, err := tx.Query(ctx, "SELECT id, name, dimension_id, created_at, updated_at FROM chat_channels WHERE deleted_at IS NULL")
+	rows, err := tx.Query(ctx, "SELECT id, name, dimension_id, public, created_at, updated_at FROM chat_channels WHERE deleted_at IS NULL")
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +93,7 @@ func (p *chatChannelPgxRepository) GetAll(ctx context.Context) (*chat.Channels, 
 	channels := make(chat.Channels, 0)
 	for rows.Next() {
 		channel := &chat.Channel{}
-		err = rows.Scan(&channel.Id, &channel.Name, &channel.DimensionId, &channel.CreatedAt, &channel.UpdatedAt)
+		err = rows.Scan(&channel.Id, &channel.Name, &channel.DimensionId, &channel.Public, &channel.CreatedAt, &channel.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -139,8 +138,8 @@ func (p *chatChannelPgxRepository) Save(ctx context.Context, channel *chat.Chann
 	}
 
 	ct, err := tx.Exec(ctx,
-		"UPDATE chat_channels SET name = $2, dimension_id = $3, updated_at = $4 WHERE id = $1",
-		channel.Id, channel.Name, channel.DimensionId, time.Now().UTC(),
+		"UPDATE chat_channels SET name = $2, dimension_id = $3, public = $4 WHERE id = $1",
+		channel.Id, channel.Name, channel.DimensionId, channel.Public,
 	)
 	if ct.RowsAffected() == 0 {
 		return nil, ErrDoesNotExist
@@ -177,6 +176,13 @@ func (p *chatChannelPgxRepository) Update(ctx context.Context, request *UpdateRe
 			log.Logger.Infof("dimension_id: %s", updates["dimension_id"])
 		} else {
 			updates["dimension_id"] = *request.DimensionId
+		}
+	}
+	if request.Public != nil {
+		if *request.Public {
+			updates["public"] = "true"
+		} else {
+			updates["public"] = "false"
 		}
 	}
 
@@ -225,8 +231,8 @@ func (p *chatChannelPgxRepository) Update(ctx context.Context, request *UpdateRe
 
 func (p *chatChannelPgxRepository) queryById(ctx context.Context, tx pgx.Tx, id *uuid.UUID) (*chat.Channel, error) {
 	outChannel := &chat.Channel{}
-	err := tx.QueryRow(ctx, "SELECT id, name, dimension_id, created_at, updated_at FROM chat_channels WHERE id = $1", id).
-		Scan(&outChannel.Id, &outChannel.Name, &outChannel.DimensionId, &outChannel.CreatedAt, &outChannel.UpdatedAt)
+	err := tx.QueryRow(ctx, "SELECT id, name, dimension_id, public, created_at, updated_at FROM chat_channels WHERE id = $1", id).
+		Scan(&outChannel.Id, &outChannel.Name, &outChannel.DimensionId, &outChannel.Public, &outChannel.CreatedAt, &outChannel.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

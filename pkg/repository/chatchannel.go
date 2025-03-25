@@ -11,6 +11,7 @@ type UpdateRequest struct {
 	ChannelId   *uuid.UUID
 	Name        *string
 	DimensionId *string
+	Public      *bool
 }
 
 type ChatChannelRepository interface {
