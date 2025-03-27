@@ -59,7 +59,8 @@ func (s *chatServiceServer) validateChannelPermissions(
 		log.Logger.WithContext(ctx).Errorf("%v: %v", ErrChatPermissionGet, err)
 		return nil, nil, status.Error(codes.Internal, ErrChatPermissionGet.Error())
 	}
-	if !(channel.Public && level > chat.PermissionPermBan) && (!channel.Public && level < minLevel) {
+	log.Logger.Infof("level: %v", level)
+	if !(channel.Public && level >= chat.PermissionNone) && (!channel.Public && level < minLevel) {
 		log.Logger.WithContext(ctx).
 			Warnf("user '%s' and character '%s' tried accessing '%s' but has no permissions",
 				claims.Subject, characterId, channelId)

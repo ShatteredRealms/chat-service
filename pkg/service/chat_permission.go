@@ -84,16 +84,12 @@ func (c *ccpService) BanCharacter(ctx context.Context, characterId string, chann
 	if err != nil {
 		return common.ErrInvalidId
 	}
-	if durationSec == -1 {
+	if durationSec == 0 {
 		return c.repo.BanCharacter(ctx, &id, channelId, nil)
 	}
 
-	if durationSec == 0 {
-		return c.repo.BanCharacter(ctx, &id, channelId, &time.Time{})
-	}
-
 	if durationSec < 0 {
-		return repository.ErrInvalidBanDuration
+		return c.repo.BanCharacter(ctx, &id, channelId, &chat.PermBanTime)
 	}
 
 	time := time.Now().UTC().Add(time.Duration(durationSec) * time.Second)
