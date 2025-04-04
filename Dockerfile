@@ -1,5 +1,5 @@
 # Build application
-FROM golang:1.23 AS build
+FROM golang:1.24 AS build
 WORKDIR /src
 ENV CGO_ENABLED=0
 COPY go.mod .
@@ -12,7 +12,7 @@ RUN go build \
 	-o /out/chat ./cmd/chat-service
 
 # Run server
-FROM alpine:3.15.0
+FROM alpine:3.21.3
 WORKDIR /app
 COPY --from=build /out/chat ./
 COPY ./migrations ./migrations

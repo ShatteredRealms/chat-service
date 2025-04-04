@@ -40,7 +40,12 @@ func NewChatContext(ctx context.Context, cfg *config.ChatConfig, serviceName str
 		return nil, fmt.Errorf("connect db: %w", err)
 	}
 
-	migrater, err := commonrepo.NewPgxMigrater(ctx, cfg.Postgres.PostgresDSN(), cfg.PostgresMigrationPath)
+	migrater, err := commonrepo.NewPgxMigrater(
+		ctx,
+		cfg.Postgres.PostgresDSN(),
+		cfg.PostgresMigrationPath,
+		cfg.Mode != cconfig.ModeProduction,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("migrater: %w", err)
 	}
