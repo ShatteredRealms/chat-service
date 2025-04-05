@@ -737,6 +737,8 @@ github.com/ShatteredRealms/go-common-service v0.9.25 h1:qLm2DQ6uIy7pgr5/amSCFlMF
 github.com/ShatteredRealms/go-common-service v0.9.25/go.mod h1:AxfNgvbQ0T/gN3FASOaHlOjL0tEZldyDokLMg1G+V8c=
 github.com/ShatteredRealms/go-common-service v0.10.0 h1:ypr0SBp/PFa0vdYU2qCBe3b3vfdYarcC9wVtCJ7xp+8=
 github.com/ShatteredRealms/go-common-service v0.10.0/go.mod h1:AxfNgvbQ0T/gN3FASOaHlOjL0tEZldyDokLMg1G+V8c=
+github.com/ShatteredRealms/go-common-service v0.10.1 h1:lebP2myM8vo5zwH/Nzb3vArcAicfrh0dfdIwtPpLr1o=
+github.com/ShatteredRealms/go-common-service v0.10.1/go.mod h1:AxfNgvbQ0T/gN3FASOaHlOjL0tEZldyDokLMg1G+V8c=
 github.com/WilSimpson/gocloak/v13 v13.11.3 h1:5Y2j7x3SD8wnwir2dBEOr6XY2Yo6wPQQ24hfkig6KXA=
 github.com/WilSimpson/gocloak/v13 v13.11.3/go.mod h1:eDvDoPilqXcGfMPCZo9seeXEb7Gur5A/MyWz5CaZQH4=
 github.com/ajstarks/deck v0.0.0-20200831202436-30c9fc6549a9/go.mod h1:JynElWSGnm/4RlzPXRlREEwqTHAN3T56Bv2ITsFT3gY=

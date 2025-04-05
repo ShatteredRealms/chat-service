@@ -44,7 +44,7 @@ func main() {
 	log.Logger.WithContext(ctx).Infof("Starting %s service", config.ServiceName)
 
 	// OpenTelemetry setup
-	otelShutdown, err := telemetry.SetupOTelSDK(ctx, "chat", config.Version, cfg.OpenTelemtryAddress)
+	otelShutdown, err := telemetry.SetupOTelSDK(ctx, "chat", config.Version, cfg.OpenTelemetryAddress)
 	defer func() {
 		log.Logger.Infof("Shutting down")
 		err = otelShutdown(context.Background())

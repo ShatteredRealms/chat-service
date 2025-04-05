@@ -3,7 +3,7 @@ module github.com/ShatteredRealms/chat-service
 go 1.23.3
 
 require (
-	github.com/ShatteredRealms/go-common-service v0.10.0
+	github.com/ShatteredRealms/go-common-service v0.10.1
 	github.com/WilSimpson/gocloak/v13 v13.11.3
 	github.com/go-faker/faker/v4 v4.5.0
 	github.com/google/uuid v1.6.0

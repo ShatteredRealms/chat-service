@@ -33,9 +33,9 @@ func NewChatConfig(ctx context.Context) (*ChatConfig, error) {
 				ClientId:     "sro-chat-service",
 				ClientSecret: "**********",
 			},
-			Mode:                "local",
-			LogLevel:            logrus.InfoLevel,
-			OpenTelemtryAddress: "localhost:4317",
+			Mode:                 "local",
+			LogLevel:             logrus.InfoLevel,
+			OpenTelemetryAddress: "localhost:4317",
 			Kafka: cconfig.ServerAddresses{
 				{
 					Host: "localhost",
